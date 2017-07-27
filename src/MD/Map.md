@@ -1,5 +1,6 @@
 [学习网站]
 ## Map 的实现原理
+参考[美团点评技术团队]
 ### HashMap 的实现原理
 HashMap 是基于哈希表的 Map 接口的非同步实现。此实现提供所有可选的映射操作，并允许使用 null 值和 null 键。
 此类不保证映射的顺序，特别是它不保证该顺序恒久不变。
@@ -11,6 +12,7 @@ HashMap 底层就是一个数组结构，数组中的每一项又是一个链表
 HashMap 的容量总是 2 的 n 次方，即底层数组的长度总是为` 2 的 n 次方(容量左移实现)`。
 所以说，当数组长度为 2 的 n 次幂的时候，不同的 key 算得得 index 相同的几率较小，那么数据在数组上分布就比较均匀，
 也就是说碰撞的几率小，相对的，查询的时候就不用遍历某个位置上的链表，这样查询效率也就较高了。
+这里的`Hash算法`本质上就是三步：`取key的hashCode值`、`高位运算`、`取模运算`。
 #### 归纳
 简单地说，HashMap 在底层将 key-value 当成一个整体进行处理，这个整体就是一个 Entry 对象。HashMap 底层采用一个 Entry[] 数组来保存
 所有的 key-value 对，当需要存储一个 Entry 对象时，会根据 hash 算法来决定其在数组中的存储位置，在根据 equals 方法决定其在该数组位
@@ -25,7 +27,10 @@ HashMap 的性能。
 　　这里HashMap里面用到链式数据结构的一个概念。上面我们提到过Entry类里面有一个next属性，作用是指向下一个Entry。打个比方， 
 第一个键值对A进来，通过计算其key的hash得到的index=0，记做:Entry[0] = A。一会后又进来一个键值对B，通过计算其index也等于0，
 现在怎么办？HashMap会这样做:B.next = A,Entry[0] = B,如果又进来C,index也等于0,那么C.next = B,Entry[0] = C；这样我们发现index=0
-的地方其实存取了A,B,C三个键值对,他们通过next这个属性链接在一起。所以疑问不用担心。也就是说数组中存储的是最后插入的元素。到这里为止，
+的地方其实存取了A,B,C三个键值对,他们通过next这个属性链接在一起。所以疑问不用担心。也就是说数组中存储的是最后插入的元素。到这里为止
+### jdk8
+`HashMap是数组+链表+红黑树`
+先查看 table[i] 是否为 treeNode，如果是红黑树插入键值对，不是遍历链表，`链表长度大于8转换为红黑树`，插入键值对，小于8，链表插入
 ####  解决hash冲突的办法
 1.开放定址法（线性探测再散列，二次探测再散列，伪随机探测再散列）
 2.再哈希法
@@ -109,7 +114,7 @@ ConcurrentHashMap 的成员变量中，包含了一个 Segment 的数组（final
 的内部类，然后在 Segment 这个类中，包含了一个 HashEntry 的数组（`transient volatile HashEntry<K,V>[] table;`）。而 HashEntry 
 也是 ConcurrentHashMap 的`内部类`。HashEntry 中，包含了 key 和 value 以及 next 指针（类似于 HashMap 中 Entry），所以 HashEntry 
 可以构成一个链表。
-
+Segment继承自`ReentrantLock`，所以我们可以很方便的对每一个Segment上锁。
 ConcurrentHashMap 的结构中包含的 Segment 的数组，在默认的并发级别会创建包含 16 个 Segment 对象的数组。通过我们上面的知识，我们
 知道每个 Segment 又包含若干个散列表的桶，每个桶是由 HashEntry 链接起来的一个链表。如果 key 能够均匀散列，每个 Segment 大约守护
 整个散列表桶总数的 1/16。
@@ -134,12 +139,25 @@ ConcurrentHashMap 的高并发性主要来自于三个方面：
 3. 通过对同一个 Volatile 变量的写 / 读访问，协调不同线程间读 / 写操作的内存可见性。
 使用分离锁，减小了请求 同一个锁的频率。
 
+#### 不同之处
+ConcurrentHashMap与HashMap相比，有以下不同点
+ConcurrentHashMap线程安全，而HashMap非线程安全
+`HashMap允许Key和Value为null，而ConcurrentHashMap不允许`
+HashMap不允许通过Iterator遍历的同时通过HashMap修改，而ConcurrentHashMap允许该行为，并且该更新对后续的遍历可见
 
 ### jdk8
-http://www.jasongj.com/java/concurrenthashmap/
-Java 7为实现并行访问，引入了Segment这一结构，实现了分段锁，理论上最大并发度与Segment个数相等。Java 8为进一步提高并发性，
-摒弃了分段锁的方案，而是直接使用一个大的数组。同时为了提高哈希碰撞下的寻址性能，Java 8在链表长度超过一定阈值（8）时将链表
-（寻址时间复杂度为O(N)）转换为红黑树（寻址时间复杂度为O(long(N))）。
+参考博客 [ConcurrentHashMap博客] 和 [ConcurrentHashMap阿里云栖社区]
+
+`Java 7`为实现并行访问，引入了Segment这一结构，实现了分段锁，`理论上最大并发度与Segment个数相等`。`Java 8为进一步提高并发性`，
+摒弃了分段锁的方案，而是直接使用一个`大的数组`。同时为了提高哈希碰撞下的`寻址性能`，Java 8在链表长度超过一定`阈值（8）`时将链表
+（寻址时间复杂度为O(N)）转换为`红黑树`（寻址时间复杂度为O(long(N))）。
+Java 8的ConcurrentHashMap作者认为引入红黑树后，即使哈希冲突比较严重，寻址效率也足够高
+
+CAS算法；unsafe.compareAndSwapInt(this, valueOffset, expect, update);  `CAS(Compare And Swap)`，意思是如果valueOffset位置
+包含的值与expect值相同，则更新valueOffset位置的值为update，并返回true，否则不更新，返回false。
+与Java8的HashMap有相通之处，底层依然由`“数组”+链表+红黑树`；
+底层结构存放的是TreeBin对象，而不是TreeNode对象；
+CAS作为知名无锁算法，那ConcurrentHashMap就没用锁了么？当然不是，hash值相同的`链表的头结点还是会synchronized上锁`。 
 
 
 
@@ -166,6 +184,23 @@ LRU 缓存利用了这样的一种思想。LRU 是` Least Recently Used `的缩�
 可以实现按照插入顺序存储）。第二，LinkedHashMap 本身有一个方法用于判断是否需要移除最不常读取的数，但是，原始方法默认不需要移除
 （这是，LinkedHashMap 相当于一个linkedlist），所以，我们需要 override 这样一个方法，使得当缓存里存放的数据个数超过规定个数后，
 就把最不常用的移除掉。关于 LinkedHashMap 中已经有详细的介绍。
+
+
+### WeekHashMap
+WeakHashMap，从名字可以看出它是某种 Map。它的特殊之处在于 WeakHashMap 里的entry可能会被GC自动删除，即使程序员没有调用remove()或者clear()方法。
+更直观的说，当使用 WeakHashMap 时，即使没有显示的添加或删除任何元素，也可能发生如下情况：
+- 调用两次size()方法返回不同的值；
+- 两次调用isEmpty()方法，第一次返回false，第二次返回true；
+- 两次调用containsKey()方法，第一次返回true，第二次返回false，尽管两次使用的是同一个key；
+- 两次调用get()方法，第一次返回一个value，第二次返回null，尽管两次使用的是同一个对象。
+遇到这么奇葩的现象，你是不是觉得使用者一定会疯掉？其实不然，WeekHashMap 的这个特点特别`适用于需要缓存的场景`。在缓存场景下，
+由于内存是有限的，不能缓存所有对象；对象缓存命中可以提高系统效率，但缓存MISS也不会造成错误，因为可以通过计算重新得到。
+要明白 WeekHashMap 的工作原理，还需要引入一个概念：弱引用（WeakReference）。我们都知道Java中内存是通过GC自动管理的，
+GC会在程序运行过程中自动判断哪些对象是可以被回收的，并在合适的时机进行内存释放。GC判断某个对象是否可被回收的依据是，
+是否有有效的引用指向该对象。如果没有有效引用指向该对象（基本意味着不存在访问该对象的方式），那么该对象就是可回收的。
+这里的“有效引用”并不包括弱引用。也就是说，虽然弱引用可以用来访问对象，但进行垃圾回收时弱引用并不会被考虑在内，仅有弱引用指向的对象仍然会被GC回收。
+`WeakHashMap 内部是通过弱引用来管理entry的`， WeakHashMap 将一对key, value放入到 WeakHashMap里并不能避免该key值被GC回收，
+除非在 WeakHashMap 之外还有对该key的强引用。
 
 
 ### Hashtable
@@ -228,5 +263,23 @@ fail-fast 机制是 java 集合(Collection)中的一种错误机制。 当`多�
 
 
 
-[哈希表博客]:http://blog.csdn.net/u011080472/article/details/51177412
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 [学习网站]:http://wiki.jikexueyuan.com/project/java-collection/hashmap.html
+[美团点评技术团队]:https://tech.meituan.com/java-hashmap.html
+[ConcurrentHashMap博客]:http://www.jasongj.com/java/concurrenthashmap/
+[ConcurrentHashMap阿里云栖社区]:https://yq.aliyun.com/articles/36781#
+[哈希表博客]:http://blog.csdn.net/u011080472/article/details/51177412
