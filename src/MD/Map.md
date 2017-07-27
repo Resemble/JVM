@@ -102,6 +102,7 @@ public class HahsMapTest {
 
 
 ### ConcurrentHashMap 的实现原理
+### jdk7
 ConcurrentHashMap 的结构是比较复杂的，都深究去本质，其实也就是数组和链表而已。 `锁分段技术`
 ConcurrentHashMap 数据结构为一个 Segment 数组，Segment 的数据结构为 HashEntry 的数组，而 `HashEntry 存的是我们的键值对`，可以构成链表。
 ConcurrentHashMap 的成员变量中，包含了一个 Segment 的数组（final Segment<K,V>[] segments;），而 Segment 是 ConcurrentHashMap 
@@ -132,6 +133,14 @@ ConcurrentHashMap 的高并发性主要来自于三个方面：
 2. 用 HashEntery 对象的不变性来降低执行读操作的线程在遍历链表期间对加锁的需求。
 3. 通过对同一个 Volatile 变量的写 / 读访问，协调不同线程间读 / 写操作的内存可见性。
 使用分离锁，减小了请求 同一个锁的频率。
+
+
+### jdk8
+http://www.jasongj.com/java/concurrenthashmap/
+Java 7为实现并行访问，引入了Segment这一结构，实现了分段锁，理论上最大并发度与Segment个数相等。Java 8为进一步提高并发性，
+摒弃了分段锁的方案，而是直接使用一个大的数组。同时为了提高哈希碰撞下的寻址性能，Java 8在链表长度超过一定阈值（8）时将链表
+（寻址时间复杂度为O(N)）转换为红黑树（寻址时间复杂度为O(long(N))）。
+
 
 
 ### LinkedHashMap 的实现原理
