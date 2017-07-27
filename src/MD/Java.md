@@ -64,3 +64,35 @@ public class IO {
 当线程执行wait()时，会把当前的锁释放，然后让出CPU，进入等待状态。
 当执行notify/notifyAll方法时，会唤醒一个处于等待该 对象锁 的线程，然后继续往下执行，
 `直到执行完退出对象锁锁住的区域（synchronized修饰的代码块）后再释放锁`。
+
+
+wait方法是`Object类`的方法，这意味着所有的Java类都可以调用该方法。sleep方法是`Thread类`的静态方法。
+wait是在当前线程持有wait对象锁的情况下，`暂时放弃锁，并让出CPU资源`，并积极等待其它线程调用同一对象的notify或者
+notifyAll方法。注意，即使只有一个线程在等待，并且有其它线程调用了notify或者notifyAll方法，等待的线程只是被激活，
+但是`它必须得再次获得锁才能继续往下执行`。换言之，即使notify被调用，但只要锁没有被释放，原等待线程因为未获得锁仍然
+无法继续执行。
+
+## Java 锁
+### 重入锁
+Java中的重入锁（即ReentrantLock）与Java内置锁一样，是一种排它锁。`使用synchronized的地方一定可以用ReentrantLock代替。`
+
+`重入锁需要显示请求获取锁，并显示释放锁`。为了避免获得锁后，没有释放锁，而造成其它线程无法获得锁而造成死锁，一般建议将释放锁操作
+放在finally块里。
+如果重入锁已经被其它线程持有，则当前线程的lock操作会被阻塞。除了lock()方法之外，重入锁（或者说锁接口）还提供了其它获取锁的
+方法以实现不同的效果。
+lockInterruptibly() 该方法尝试获取锁，若获取成功立即返回；若获取不成功则阻塞等待。
+tryLock() 该方法试图获取锁，若该锁当前可用，则该方法立即获得锁并立即返回true；若锁当前不可用，则立即返回false。该方法不会阻塞，并提供给用户对于成功获利锁与获取锁失败进行不同操作的可能性。
+tryLock(long time, TimeUnit unit) 该方法试图获得锁，若该锁当前可用，则立即获得锁并立即返回true。
+若锁当前不可用，则等待相应的时间（由该方法的两个参数决定）：1）若该时间内锁可用，则获得锁，并返回true；
+2）若等待期间当前线程被打断，则抛出InterruptedException；
+3）若等待时间结束仍未获得锁，则返回false。
+
+### 读写锁（ReadWriteLock）
+对于读多写少的场景，一个读操作无须阻塞其它读操作，只需要保证读和写或者写与写不同时发生即可。此时，如果使用重入锁（即排它锁），
+对性能影响较大。Java中的读写锁（ReadWriteLock）就是为这种读多写少的场景而创造的。
+
+实际上，ReadWriteLock接口并非继承自Lock接口，ReentrantReadWriteLock也只实现了ReadWriteLock接口而未实现Lock接口。
+ReadLock和WriteLock，是ReentrantReadWriteLock类的静态内部类，它们实现了Lock接口。
+
+### 条件锁
+条件锁只是一个帮助用户理解的概念，实际上并没有条件锁这种锁。对于每个重入锁，都可以通过newCondition()方法绑定若干个条件对象。

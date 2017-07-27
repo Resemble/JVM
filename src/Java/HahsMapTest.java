@@ -2,6 +2,7 @@ package Java;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author ranran
@@ -16,6 +17,8 @@ public class HahsMapTest {
     public static void main(String[] args) {
 
         HashMap<Integer, String> hashMap = new HashMap();
+        ConcurrentHashMap<String, String> concurrentHashMap =  new ConcurrentHashMap<>();
+        concurrentHashMap.put("fsd", "fsd");
         hashMap.put(2, "23");
         hashMap.put(22, "232");
         hashMap.put(21, "er3");
