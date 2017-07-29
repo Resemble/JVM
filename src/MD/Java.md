@@ -141,3 +141,33 @@ handler)，或者是回调函数；事件分发器在适当的时候，会将请
 发器得知了这个请求，它默默等待这个请求的完成，然后转发完成事件给相应的事件处理者或者回调。举例来说，在Windows上事件处理者投递了一个
 异步IO操作（称为overlapped技术），事件分发器等IO Complete事件完成。这种异步模式的典型实现是基于操作系统底层异步API的，所以我们可
 称之为“系统级别”的或者“真正意义上”的异步，因为具体的读写是由操作系统代劳的。
+
+
+### ExecutorService
+#### 四类 Pool
+1. CachedThreadPool
+CachedThreadPool首先会`按照需要创建足够多的线程来执行任务(Task)`。随着程序执行的过程，有的线程执行完了任务，可以被重新循环使用时，才不再创建新的线程来执行任务
+
+2. FixedThreadPool
+FixedThreadPool模式会使用一个`优先固定数目的线程`来处理若干数目的任务。规定数目的线程处理所有任务，`一旦有线程处理完了任务就会被
+用来处理新的任务(如果有的话)`。这种模式与上面的CachedThreadPool是不同的，CachedThreadPool模式下处理一定数量的任务的线程数目是不确
+定的。而FixedThreadPool模式下最多 的线程数目是一定的。
+
+3. SingleThreadExecutor模式
+SingleThreadExecutor模式只会创建一个线程。它和FixedThreadPool比较类似，不过`线程数是一个`。如果多个任务被提交给SingleThreadExecutor的话，
+那么这些任务会被保存在`一个队列中`，并且会按照任务提交的顺序，一个先执行完成再执行另外一个线程。
+SingleThreadExecutor模式可以保证只有一个任务会被执行。这种特点可以被用来处理共享资源的问题而不需要考虑同步的问题。
+4. ScheduledExecutorService执行`周期性或定时任务`
+schedule方法被用来延迟指定时间来执行某个指定任务。如果你需要周期性重复执行定时任务可以使用scheduleAtFixedRate或者
+scheduleWithFixedDelay方法，它们不同的是前者以固定频率执行，后者以相对固定频率执行。
+
+任务分两类：一类是实现了Runnable接口的类，一类是实现了Callable接口的类。两者都可以被ExecutorService执行，但是Runnable任务没有返回值，
+而Callable任务有返回值。并且Callable的call()方法只能通过ExecutorService的(<T> task) 方法来执行，并且返回一个 <T><T>，是表示任务等待完成的 Future。
+### execute方法和submit方法三个区别：
+1、接收的参数不一样
+2、submit有返回值，而execute没有
+Method submit extends base method Executor.execute by creating and returning a Future that can be used to cancel execution and/or wait for completion. 
+用到返回值的例子，比如说我有很多个做validation的task，我希望所有的task执行完，然后每个task告诉我它的执行结果，是成功还是失败，如果是失败，原因是什么。然后我就可以把所有失败的原因综合起来发给调用者。
+个人觉得cancel execution这个用处不大，很少有需要去取消执行的。
+而最大的用处应该是第二点。
+3、submit方便Exception处理
