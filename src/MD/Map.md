@@ -20,7 +20,7 @@ HashMap 的容量总是 2 的 n 次方，即底层数组的长度总是为` 2 �
 取出该Entry。
 #### 扩容
 默认的的负载因子 0.75 是对空间和时间效率的一个平衡选择。
-默认情况下，数组大小为 16，那么当 HashMap 中元素个数超过 16*0.75=12 的时候，就把数组的大小扩展为 2*16=32，即扩大一倍，然后重新计
+默认情况下，数组大小为 16，那么当 HashMap 中元素个数超过 16*0.75=12 的时候，就把数组的大小扩展为` 2*16=32，即扩大一倍，`然后重新计
 算每个元素在数组中的位置，而这是一个非常消耗性能的操作，所以如果我们已经预知 HashMap 中元素的个数，那么预设元素的个数能够有效的提高
 HashMap 的性能。
 #### 疑问：如果两个key通过hash%Entry[].length得到的index相同，会不会有覆盖的危险？
@@ -153,7 +153,7 @@ HashMap不允许通过Iterator遍历的同时通过HashMap修改，而Concurrent
 
 `Java 7`为实现并行访问，引入了Segment这一结构，实现了分段锁，`理论上最大并发度与Segment个数相等`。`Java 8为进一步提高并发性`，
 摒弃了分段锁的方案，而是直接使用一个`大的数组`。同时为了提高哈希碰撞下的`寻址性能`，Java 8在链表长度超过一定`阈值（8）`时将链表
-（寻址时间复杂度为O(N)）转换为`红黑树`（寻址时间复杂度为O(long(N))）。
+（寻址时间复杂度为O(N)）转换为`红黑树`（寻址时间复杂度为O(log(N))）。
 Java 8的ConcurrentHashMap作者认为引入红黑树后，即使哈希冲突比较严重，寻址效率也足够高
 
 CAS算法；unsafe.compareAndSwapInt(this, valueOffset, expect, update);  `CAS(Compare And Swap)`，意思是如果valueOffset位置
@@ -225,7 +225,7 @@ public class ArrayList<E> extends AbstractList<E>
 }
 ```
 ArrayList 继承了 AbstractList，实现了 List。它是一个数组队列，提供了相关的添加、删除、修改、遍历等功能。
-ArrayList 实现了 RandmoAccess 接口，即提供了随机访问功能。RandmoAccess 是 java 中用来被 List 实现，为 List 提供快速访问功能的。
+ArrayList 实现了 RandomAccess 接口，即提供了随机访问功能。RandomAccess 是 java 中用来被 List 实现，为 List 提供快速访问功能的。
 在 ArrayList 中，我们即可以通过元素的序号快速获取元素对象；这就是快速随机访问。
 ArrayList 实现了 Cloneable 接口，即覆盖了函数 clone()，能被克隆。 ArrayList 实现 java.io.Serializable 接口，这意味着 ArrayList
  `支持序列化`，能通过序列化去传输。
@@ -249,6 +249,14 @@ LinkedList 是基于链表结构实现，所以在类中包含了 first 和 last
 ### Fail-Fast 机制
 ArrayList HashMap ...
 #### 原理
+一种错误检测机制 多线程 源代码中通过 modCount 来实现，修改次数哈哈
+
+（1）单线程环境
+集合被创建后，在遍历它的过程中修改了结构。  比如在 iterator 中遍历时 put 进去
+注意 remove()方法会让expectModcount和modcount 相等，所以是不会抛出这个异常。
+（2）多线程环境
+当一个线程在遍历这个集合，而另一个线程对这个集合的结构进行了修改。
+
 我们知道 java.util.HashMap 不是线程安全的，因此如果在使用迭代器的过程中有其他线程修改了 map，那么将抛出 
 ConcurrentModificationException，这就是所谓 fail-fast 策略。
 fail-fast 机制是 java 集合(Collection)中的一种错误机制。 当`多个线程对同一个集合的内容进行操作`时，就可能会产生 fail-fast 事件。
@@ -257,8 +265,63 @@ fail-fast 机制是 java 集合(Collection)中的一种错误机制。 当`多�
 这一策略在源码中的实现是通过 modCount 域，`modCount 顾名思义就是修改次数`，对 HashMap 内容（当然不仅仅是 HashMap 才会有，其他例如
  ArrayList 也会）的修改都将增加这个值（大家可以再回头看一下其源码，在很多操作中都有 modCount++ 这句），那么在迭代器初始化过程中会
  将这个值赋给迭代器的 expectedModCount。
+#### 哪些符合
+- Map:
+ HashMap
+ LinkedHashMap
+ TreeMap
+ Hashtable 虽然 Hashtable 是线程安全的
+- Set:
+ HashSet
+ LinkedHashSet
+ TreeSet
+- List:
+ ArrayList
+ LinkedList
+ Vector 虽然 Vector 是线程安全的
+使用 Collections.synchronizedXXX() 创建的线程安全的集合也是 Fail-fast
 
+### fail-safe机制
+fail-safe任何对集合结构的修改都会在一个`复制的集合上`进行修改，因此不会抛出ConcurrentModificationException
+fail-safe机制有两个问题
+（1）需要复制集合，产生大量的无效对象，`开销大`
+（2）无法保证读取的数据是目前原始数据结构中的数据。 `无法保证数据最新`
+ 
+### ThreadLocal 
+参考 [深入分析 ThreadLocal 内存泄漏问题]
+ThreadLocal是一个关于`创建线程局部变量的类`。
+通常情况下，我们创建的变量是可以被任何一个线程访问并修改的。而使用ThreadLocal创建的变量只能被当前线程访问，其他线程则无法访问和修改。
+#### 基本工作原理
+ThreadLocal的实现是这样的：每个Thread 维护一个 ThreadLocalMap 映射表，这个映射表的 key 是 ThreadLocal 实例本身，value 是真正需要存储的 Object。
+也就是说 ThreadLocal 本身并不存储值，它只是作为一个 key 来让线程从 ThreadLocalMap 获取 value。值得注意的是图中的虚线，表示 
+ThreadLocalMap 是使用 ThreadLocal 的弱引用作为 Key 的，弱引用的对象在 GC 时会被回收。
 
+每个线程对象的 threadLocals 属性内部都有一个 Hash 表，用来存放我们通过 ThreadLocal 对象在当前线程设置的值，Hash 值根据 
+ThreadLocal 对象的 hashCode 计算得出，当获取值的时候，就通过这个 Hash 值在当前线程对象的 threadLocals 属性内部的 Hash 表里寻找。
+
+#### 设置值
+下面是ThreadLocal的set方法，大致意思为
+- 首先获取当前线程 
+- 利用当前线程作为句柄获取一个`ThreadLocalMap的对象` getMap(t)函数
+- 如果上述ThreadLocalMap对象不为空，则设置值，否则创建这个ThreadLocalMap对象并设置值
+总结：实际上`ThreadLocal的值是放入了当前线程的一个ThreadLocalMap实例中`，所以只能在本线程中访问，其他线程无法访问。
+#### 对象存放在哪里
+在Java中，栈内存归属于单个线程，每个线程都会有一个栈内存，其存储的变量只能在其所属线程中可见，即`栈内存可以理解成线程的私有内存`。
+`而堆内存中的对象对所有线程可见`。堆内存中的对象可以被所有线程访问。
+#### 问：那么是不是说ThreadLocal的实例以及其值存放在栈上呢？
+其实不是，因为ThreadLocal实例实际上也是被其创建的类持有（更顶端应该是被线程持有）。而ThreadLocal的值其实也是被线程实例持有。
+它们都是`位于堆上`，只是通过一些技巧将可见性修改成了线程可见。
+
+#### 内存泄漏
+其实，ThreadLocalMap的设计中已经考虑到这种情况，也加上了一些防护措施：在ThreadLocal的get(),set(),remove()的时候都会清除
+线程ThreadLocalMap里所有key为null的value。但是这些被动的预防措施并不能保证不会内存泄漏：
+- 使用static的ThreadLocal，延长了ThreadLocal的生命周期，可能导致的内存泄漏。
+- 分配使用了ThreadLocal又不再调用get(),set(),remove()方法，那么就会导致内存泄漏。
+
+#### 使用场景
+- 实现单个线程单例以及单个线程上下文信息存储，比如交易id等
+- 实现线程安全，非线程安全的对象使用ThreadLocal之后就会变得线程安全，因为每个线程都会有一个对应的实例
+- 承载一些线程相关的数据，避免在方法中来回传递参数
 
 ### TreeMap
 TreeMap的实现是红黑树算法的实现
@@ -320,3 +383,4 @@ CopyOnWriteArrayList:CopyOnWriteArrayList这是一个ArrayList的线程安全的
 [ConcurrentHashMap阿里云栖社区]:https://yq.aliyun.com/articles/36781#
 [哈希表博客]:http://blog.csdn.net/u011080472/article/details/51177412
 [TreeMap和红黑树]:http://blog.csdn.net/chenssy/article/details/26668941
+[深入分析 ThreadLocal 内存泄漏问题]:http://blog.xiaohansong.com/2016/08/06/ThreadLocal-memory-leak/

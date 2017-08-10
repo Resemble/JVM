@@ -316,8 +316,17 @@ web容器加载servlet，生命周期开始。通过调用servlet的init()方法
 - jsp:forward：把请求转到一个新的页面。
 - jsp:plugin：根据浏览器类型为Java插件生成OBJECT或EMBED标记
 
-
-
+### 反射和代理
+#### Java 反射机制
+JAVA反射机制是在运行状态中，对于任意一个类，都能够知道这个`类的所有属性和方法`；对于任意一个`对象，都能够调用它的任意一个方法和属性`；
+这种`动态获取的信息`以及`动态调用对象的方法的功能`称为java语言的反射机制。 
+#### Java 动态代理
+通过反射在被调用方法前后加上自己的操作，而不需要更改被调用类的源码，大大地降低了模块之间的耦合性，体现了极大的优势。
+#### 关于类加载器
+在Proxy类中的newProxyInstance()方法中需要一个ClassLoader类的实例，ClassLoader实际上对应的是类加载器，在Java中主要有以下三种类加载器：
+① Booststrap ClassLoader：此加载器采用C++编写，通常加载jre/lib/rt.jar，一般开发中是看不到的； 
+② Extendsion ClassLoader：用来进行扩展类的加载，通常加载jre/lib/ext/*.jar; 
+③ AppClassLoader：(默认)加载classpath指定的类，是最常使用的是一种加载器；
 
 
 
