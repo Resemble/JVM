@@ -173,7 +173,7 @@ Method submit extends base method Executor.execute by creating and returning a F
 3、submit方便Exception处理
 
 ### 对象已死了吗
-引用计数算法 可达性分析算法
+引用计数算法 可达性分析算法( jvm 采用这个，从 root 开始检索)
 
 ### 引用
 #### 强引用
@@ -291,7 +291,7 @@ Spring对多种ORM框架提供了很好的支持
 此外，代码中的System.out语句会严重影响代码执行的效率，就将这些为必要的语句在调试完成之后全部删除以提高效率。
 
 ### 说一说Servlet的生命周期?
-答:servlet有良好的生存期的定义，包括加载和`实例化、初始化、处理请求以及服务结束`。这个生存期由`javax.servlet.Servlet接口的init,service和destroy方法表达`。
+答:servlet有良好的生存期的定义，包括`加载`和`实例化、初始化、处理请求以及服务结束`。这个生存期由`javax.servlet.Servlet接口的init,service和destroy方法表达`。
 Servlet被服务器实例化后，容器运行其init方法，请求到达时运行其service方法，service方法自动派遣运行与请求对应的doXXX方法（doGet，doPost）等，当服务器决定将实例销毁的时候调用其destroy方法。
 web容器加载servlet，生命周期开始。通过调用servlet的init()方法进行servlet的初始化。通过调用service()方法实现，根据请求的不同调用不同的do***()方法。结束服务，web容器调用servlet的destroy()方法。
 
@@ -385,6 +385,9 @@ GC Root Tracing 算法思路就是通过一系列的名为"GC  Roots"的对象�
 
 ### 你对Spring的理解，Spring里面的代理是怎么实现的，如果让你设计，你怎么设计
    
+### Spring IOC 
+
+### Struts和springmvc的区别，两者分别是多线程还是单线程的
 
 ### 一致性 hash 算法
 1. 一般 hash 算法, Hash(图片名称) / N，N为服务器个数，分布均匀但是如果有台服务器挂了，就会让所有图片移动
@@ -393,7 +396,9 @@ GC Root Tracing 算法思路就是通过一系列的名为"GC  Roots"的对象�
 3. 虚拟节点，虚拟节点是实际节点(服务器)的复制点。使得 Hash 环分配均匀。
 
 
+### 创建多线程的三种方法及其区别
 
+### synchronize和ReentrantLock的区别
 
 
 

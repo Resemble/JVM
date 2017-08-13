@@ -227,8 +227,8 @@ public class ArrayList<E> extends AbstractList<E>
 ArrayList 继承了 AbstractList，实现了 List。它是一个数组队列，提供了相关的添加、删除、修改、遍历等功能。
 ArrayList 实现了 RandomAccess 接口，即提供了随机访问功能。RandomAccess 是 java 中用来被 List 实现，为 List 提供快速访问功能的。
 在 ArrayList 中，我们即可以通过元素的序号快速获取元素对象；这就是快速随机访问。
-ArrayList 实现了 Cloneable 接口，即覆盖了函数 clone()，能被克隆。 ArrayList 实现 java.io.Serializable 接口，这意味着 ArrayList
- `支持序列化`，能通过序列化去传输。
+ArrayList 实现了 Cloneable 接口，即覆盖了函数 clone()，能被克隆。 
+ArrayList 实现 java.io.Serializable 接口，这意味着 ArrayList `支持序列化`，能通过序列化去传输。
  
 #### 扩容
 数组进行扩容时，会将老数组中的元素重新拷贝一份到新的数组中，每次数组容量的增长大约是其原容量的` 1.5 `倍
