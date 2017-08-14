@@ -2,11 +2,11 @@
 ## Map 的实现原理
 参考[美团点评技术团队]
 ### HashMap 的实现原理
-HashMap 是基于哈希表的 Map 接口的非同步实现。此实现提供所有可选的映射操作，并允许使用 null 值和 null 键。
+HashMap 是`基于哈希表的 Map 接口的非同步实现`。此实现提供所有可选的映射操作，并允许使用 null 值和 null 键。
 此类不保证映射的顺序，特别是它不保证该顺序恒久不变。
-首先HashMap里面实现一个静态内部类Entry，其重要的属性有 key , value, next，从属性key,value我们就能很明显的看出来Entry就是
+首先HashMap里面实现一个`静态内部类Entry`，其重要的属性有 key , value, next，从属性key,value我们就能很明显的看出来Entry就是
 HashMap键值对实现的一个基础bean，我们上面说到HashMap的基础就是一个线性数组，这个数组就是Entry[]，Map里面的内容都保存在Entry[]里面。
-HashMap 底层就是一个数组结构，数组中的每一项又是一个链表。当新建一个 HashMap 的时候，就会初始化一个数组。
+HashMap 底层就是一个数组结构，`数组中的每一项又是一个链表`。当新建一个 HashMap 的时候，就会初始化一个数组。
 当系统决定存储 HashMap 中的 key-value 对时，完全没有考虑 Entry 中的 value，`仅仅只是根据 key` 来计算并决定每个 Entry 的存储位置。
 我们完全可以把 Map 集合中的 value 当成 key 的附属，当系统决定了 key 的存储位置之后，value 随之保存在那里即可。
 HashMap 的容量总是 2 的 n 次方，即底层数组的长度总是为` 2 的 n 次方(容量左移实现)`。
@@ -114,7 +114,7 @@ public class HahsMapTest {
 ConcurrentHashMap 的结构是比较复杂的，都深究去本质，其实也就是数组和链表而已。 `锁分段技术`
 ConcurrentHashMap 数据结构为一个 Segment 数组，Segment 的数据结构为 HashEntry 的数组，而 `HashEntry 存的是我们的键值对`，可以构成链表。
 ConcurrentHashMap 的成员变量中，包含了一个 Segment 的数组（final Segment<K,V>[] segments;），而 Segment 是 ConcurrentHashMap 
-的内部类，然后在 Segment 这个类中，包含了一个 HashEntry 的数组（`transient volatile HashEntry<K,V>[] table;`）。而 HashEntry 
+的`内部类`，然后`在 Segment 这个类中，包含了一个 HashEntry 的数组`（`transient volatile HashEntry<K,V>[] table;`）。而 HashEntry 
 也是 ConcurrentHashMap 的`内部类`。HashEntry 中，包含了 key 和 value 以及 next 指针（类似于 HashMap 中 Entry），所以 HashEntry 
 可以构成一个链表。
 Segment继承自`ReentrantLock`，所以我们可以很方便的对每一个Segment上锁。

@@ -14,7 +14,7 @@ import java.lang.reflect.Proxy;
  */
 
 interface Animal {
-    public void makeSound (String name);
+    public void makeSound(String name);
 }
 
 class Dog implements Animal {
@@ -60,7 +60,9 @@ class AnimalProxy implements InvocationHandler {
 public class DynamicProxyJDKDemo {
     public static void main(String[] args) {
         AnimalProxy proxy = new AnimalProxy();
-        Animal dogProxy = (Animal)proxy.getInstance(new Dog());
+        Animal dogProxy = (Animal) proxy.getInstance(new Dog());
         dogProxy.makeSound("Ran Ran");
     }
 }
+
+

@@ -90,7 +90,7 @@ Prepared Statements很像存储过程，是一种运行在后台的SQL语句集�
 
 
 ### Mysql 组合索引的最左优先原则：
-组合索引 index_a_b_c 可匹配 abc ab ac
+组合索引 index_a_b_c 可匹配  `a ab abc`
 最左匹配原则，就是最左优先，依次向右匹配，直到遇见范围查询（> < between like）就停止；
 组合索引的第一个字段必须出现在查询组句中，这个索引才会被用到。
 如果有一个组合索引(col_a,col_b,col_c)
@@ -99,13 +99,13 @@ Prepared Statements很像存储过程，是一种运行在后台的SQL语句集�
 col_a = "some value";
 col_a = "some value" and col_b = "some value";
 col_a = "some value" and col_b = "some value" and col_c = "some value";
-col_b = "some value" and col_a = "some value" and col_c = "some value";
-
+1=1 and col_a=1 and col_b=1
 对于最后一条语句，mysql会自动优化成第三条的样子~~。
 
 下面的情况就不会用到索引：
 col_b = "aaaaaa";
 col_b = "aaaa" and col_c = "cccccc";
+col_b = "some value" and col_a = "some value" and col_c = "some value";
 
 
 
