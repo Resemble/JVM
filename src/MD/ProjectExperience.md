@@ -5,13 +5,13 @@
 用户购买情况进行分析，进行用户特征提取，建模，进行个性化营销。common层 api gateway,
 ,身份验证token，服务器权限拦截器， 流控，路由，黑白名单，user-api用户管理，用户权限 修改密码。
 data-platform 可乐报表数据处理和jupiter的数据处理最开始采用clojure，最后转成spark.
-
+email-api 邮件服务，发送邮件。
 
 #### 搭建邮件服务器
 免费的不好用,或者收费的价格太贵…那干脆自己搭建邮件服务器了.
 centOs7
 - 域名解析
-- 接收和投递邮件 (Postfix，SMTP协议) 110 
+- 接收和投递邮件 (Postfix，SMTP协议) 25
 - 从邮件客户端读取邮件服务器上的邮件 (Dovecot，IMAP协议) 110
 
 #### 难题
@@ -19,7 +19,7 @@ centOs7
 
 #### 邮件服务
 - 邮件找回密码 登陆的验证码 邮件营销（一天几千封邮件） 预热
-- 频率限制 批量发送(后台开线程定期扫描，记录发送状态进行r跟踪，邮件是否打开（长宽为0，display none; href） 链接是否点击 ticket)
+- 频率限制 批量发送(后台开线程定期扫描，记录发送状态进行跟踪，邮件是否打开（长宽为0，display none; href） 链接是否点击 ticket)
 - 登陆验证码 使用异步，邮箱存入缓存 redis 中记录失败次数，次数超过10次，我认为这边出问题了。
 - 异步利用 spring @Async注解，在被调用的方法上面加上@Async注解，在调用的方法加上@EnableAsync，当然就是调用和被调用不能在一个类里面，要分开
 首先，方法所属的类的对象需要是被Spring容器所管理的，也就是指被@Controller @Service @Repository @Component这些注解的类。
@@ -162,3 +162,43 @@ git flow   feature      start
                         pull
                         
 git checkout hotfix
+
+
+
+### 智能电影推荐
+提取用户特征，对用户建模，然后推荐电影。
+### scarpy
+Scrapy 框架最大的特点是它的可配置性，我们在 settting 文件里面线程数 核数 * 2 + 2 线程，这样最快的，切换的时间，配置超时时间，请求 ip 数量，请求头
+random user agent 防止被封，一定的请求速率，如果可以的话，可以不断换 ip 进行请求。
+### bs4库(自带的库) xpath(lxml库)
+BeautifulSoup BS4 进行页面解析，找到某个标签的内容，文字 链接，比较形象生动 find findAll 
+Xpath 进行解析，一般需要找到一个唯一确定的 id 的节点，一层一层往下找
+
+BeautifulSoup是一个库，而XPath是一种技术，python中最常用的XPath库是lxml
+ 性能 lxml >> BeautifulSoup
+ 易用性  BeautifulSoup >> lxml
+ 
+### Selenium 和 PhatomJs
+想要模拟下拉操作(即 js 加载的页面)，我们需要用到两个工具，一个是PhatomJs，一个是Selenium。
+- Selenium是一个开源的和便携式的自动化软件测试工具，用于测试web应用程序有能力在各种浏览器和操作系统下运行。
+Selenium实质上是一个`自动化测试工具`，能够`模拟用户的一些行为`操作，比如下拉网页。
+- PhatomJS其实就是一个`没有界面的浏览器`，最主要的功能是能够读取js加载的页面。
+其中PhantomJS同时可以换成Chrome、Firefox、Ie等等，但是PhantomJS是一个`无头的浏览器`，运行是不会跳出相应的浏览器，运行相对效率较高。
+在调试中可以先换成Chrome，方便调试，最后再换成PhantomJS即可。
+```
+from selenium import webdriver
+driver = webdriver.PhantomJS()
+driver.get('网址')
+```
+##### 那么，怎么判断一个网站的内容是不是js动态加载的呢？
+打开网易云音乐，在页面上点击右键-->View page source。会弹出一个新窗口，在新窗口中搜索你想要爬取的内容，发现`搜不到`。那就肯定是js动态加载的了。
+
+### vueJs
+使用 vueJs 的最大一个特点是 css 和 js 都是放到一个文件里面，并且渲染页面不需要刷新
+
+
+
+### 电子健康档案
+电子健康档案这个项目是有用来记录人体生命特征的系统。通过用户将自己的健康信息导入系统进行管理。
+这是一个实验室的项目，我负责数据库开发，负责与卫生专业人士进行交流，编
+写需求文档，设计文档，统一`数据元标准`，建立一个满足国家WS卫生标准数据库
