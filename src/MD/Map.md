@@ -324,6 +324,44 @@ ThreadLocal 对象的 hashCode 计算得出，当获取值的时候，就通过�
 - 实现线程安全，非线程安全的对象使用ThreadLocal之后就会变得线程安全，因为每个线程都会有一个对应的实例
 - 承载一些线程相关的数据，避免在方法中来回传递参数
 
+```java
+public class ThreadLocalTest {  
+      
+    private static People people = new People();  
+      
+    private static ThreadLocal<People> threadLocal = new ThreadLocal<People>(){  
+        public People initialValue(){  
+            return people;  
+        }  
+    };  
+      
+    public static void main(String[] args) throws InterruptedException {  
+        new Thread(new Runnable() {  
+            @Override  
+            public void run() {  
+                threadLocal.get().age = 5;  
+                System.out.println("people = " + threadLocal.get() +  "age = " + threadLocal.get().age);  
+            }  
+        }).start();  
+          
+        Thread.sleep(10);  
+          
+        new Thread(new Runnable() {  
+            @Override  
+            public void run() {  
+                System.out.println("people = " + threadLocal.get() +  "age = " + threadLocal.get().age);  
+            }  
+        }).start();  
+    }  
+  
+}  
+  
+class People {  
+    public int age;  
+}
+```
+
+
 ### TreeMap
 TreeMap的实现是红黑树算法的实现
 参考 [TreeMap和红黑树]

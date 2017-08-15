@@ -42,11 +42,7 @@ static是静态变量,就是变量值不随函数执行结束而消失，下次�
 将调用子类中的定义，对它而言，父类中的定义如同被“屏蔽”了。如果在一个类中定义了多个同名的方法，它们或有不同的参数个数或有不同的参数类型，
 则称为方法的重载(Overloading)。Overloaded的方法是可以改变返回值的类型。
 
-#### 说出Servlet的生命周期，并说出Servlet和CGI的区别
-Servlet被服务器`实例化`后，容器运行其`init`方法，请求到达时运行其`service`方法，service方法自动派遣运行与请求对应的doXXX方法
-（doGet，doPost）等，当服务器决定将实例销毁的时候调用其`destroy方`法。
-与cgi的区别在于servlet处于服务器进程中，它通过`多线程方式运行其service方法`，一个实例可以服务于多个请求，并且其实例一般不会销毁，
-而CGI对每个请求都产生新的进程，服务完成后就销毁，所以效率上低于servlet
+
 
 #### swtich是否能作用在byte上，是否能作用在long上，是否能作用在String上?
 switch（expr1）中，expr1是一个整数表达式。因此传递给 switch 和 case 语句的参数应该是 int、 short、 char 或者 byte。
