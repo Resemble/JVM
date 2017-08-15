@@ -288,6 +288,7 @@ fail-safe机制有两个问题
 （2）无法保证读取的数据是目前原始数据结构中的数据。 `无法保证数据最新`
  
 ### ThreadLocal 
+ThreadLocal 的作用是提供`线程内的局部变量`，这种变量在线程的生命周期内起作用，减少同一个线程内多个函数或者组件之间一些公共变量的传递的复杂度。
 参考 [深入分析 ThreadLocal 内存泄漏问题]
 ThreadLocal是一个关于`创建线程局部变量的类`。
 通常情况下，我们创建的变量是可以被任何一个线程访问并修改的。而使用ThreadLocal创建的变量只能被当前线程访问，其他线程则无法访问和修改。
@@ -313,8 +314,8 @@ ThreadLocal 对象的 hashCode 计算得出，当获取值的时候，就通过�
 它们都是`位于堆上`，只是通过一些技巧将可见性修改成了线程可见。
 
 #### 内存泄漏
-其实，ThreadLocalMap的设计中已经考虑到这种情况，也加上了一些防护措施：在ThreadLocal的get(),set(),remove()的时候都会清除
-线程ThreadLocalMap里所有key为null的value。但是这些被动的预防措施并不能保证不会内存泄漏：
+其实，ThreadLocalMap的设计中已经考虑到这种情况，也加上了一些防护措施：使用弱引用，`在ThreadLocal的get(),set(),remove()的时候都会清除
+线程ThreadLocalMap里所有key为null的value。`但是这些被动的预防措施并不能保证不会内存泄漏：
 - 使用static的ThreadLocal，延长了ThreadLocal的生命周期，可能导致的内存泄漏。
 - 分配使用了ThreadLocal又不再调用get(),set(),remove()方法，那么就会导致内存泄漏。
 

@@ -1,10 +1,4 @@
 # Java 相关琐碎知识
-### Java IO库的两个设计模式
-装饰器模式：是在不必改变原类文件和使用继承的情况下，动态的扩展一个对象的功能
-适配器模式：将一个类的接口转换成客户希望的另外一个接口
-（1）装饰模式：装饰模式在Java语言中的最著名的应用莫过于java I/O标准库的设计了。
-（2）适配器模式：适配器模式是Java I/O库中第二个最重要的设计模式。
-
 ### 排序
 #### 时间复杂度
 n^2表示n的平方,选择排序有时叫做直接选择排序或简单选择排序
@@ -32,7 +26,11 @@ n^2表示n的平方,选择排序有时叫做直接选择排序或简单选择排
 2.空间复杂度不确定,要看待排序元素中最大值是多少.
 所需要的辅助数组大小即为最大元素的值.
 
-
+### Java IO库的两个设计模式
+装饰器模式：是在不必改变原类文件和使用继承的情况下，动态的扩展一个对象的功能
+适配器模式：将一个类的接口转换成客户希望的另外一个接口
+（1）装饰模式：装饰模式在Java语言中的最著名的应用莫过于java I/O标准库的设计了。
+（2）适配器模式：适配器模式是Java I/O库中第二个最重要的设计模式。
 ### java I/O库具有两个对称性
 （1）输入-输出对称：比如`InputStream 和OutputStream` 各自占据`Byte流`的输入和输出的两个平行的等级结构的根部；
 而`Reader和Writer`各自占据`Char流`的输入和输出的两个平行的等级结构的根部。
@@ -65,6 +63,17 @@ public class IO {
 当执行notify/notifyAll方法时，会唤醒一个处于等待该 对象锁 的线程，然后继续往下执行，
 `直到执行完退出对象锁锁住的区域（synchronized修饰的代码块）后再释放锁`。
 
+#### 被wait的线程，想要继续运行的话，它必须满足2个条件：
+- 由其他线程notify或notifyAll了，并且当前线程被通知到了
+- 经过和其他线程进行锁竞争，成功`获取到锁`了
+2个条件，缺一不可。其实在实现层面，`notify和notifyAll都达到相同的效果，都只会有一个线程继续运行。`但notifyAll免去了，
+线程运行完了通知其他线程的必要，因为已经通知过了。什么时候用notify，什么时候使用notifyAll，这就得看实际的情况了。
+
+当有线程调用了对象的 `notifyAll()方法（唤醒所有 wait 线程）或 notify()方法（只`随机`唤醒一个 wait 线程）`，被唤醒的的线程便会进入
+该对象的锁池中，锁池中的线程会去竞争该对象锁。也就是说，调用了notify后只要一个线程会由等待池进入锁池，而notifyAll会将该对象等待池
+内的所有线程移动到锁池中，等待锁竞争
+
+
 ### wait（）方法
 wait方法是`Object类`的方法，这意味着所有的Java类都可以调用该方法。sleep方法是`Thread类`的静态方法。
 wait是在当前线程持有wait对象锁的情况下，`暂时放弃锁，并让出CPU资源`，并积极等待其它线程调用同一对象的notify或者
@@ -84,8 +93,15 @@ sleep()睡眠时，保持`对象锁`，仍然占有该锁；
 但是wait()和sleep()都可以通过interrupt()方法打断线程的暂停状态，从而使线程立刻抛出InterruptedException（但不建议使用该方法）。
 
 ## Java 锁
-### 重入锁
-Java中的重入锁（即ReentrantLock）与Java内置锁一样，是一种排它锁。`使用synchronized的地方一定可以用ReentrantLock代替。`
+
+### 共享锁【S锁】 读锁，读时别人不能加写锁可以加读锁
+又称`读锁`，若事务T对数据对象A加上S锁，则事务T可以读A但不能修改A，其他事务只能再对A加S锁，而不能加X锁，直到T释放A上的S锁。这保证了其他事务可以读A，但在T释放A上的S锁之前不能对A做任何修改。
+
+### 排他锁【X锁】 写锁，写时别人不能加任何锁 
+又称`写锁`。若事务T对数据对象A加上X锁，事务T可以读A也可以修改A，其他事务不能再对A加任何锁，直到T释放A上的锁。这保证了其他事务在T释放A上的锁之前不能再读取和修改A。
+
+### 重入锁 ReentrantLock
+Java中的重入锁（即ReentrantLock）与Java内置锁一样，是一种`排它锁`。`使用synchronized的地方一定可以用ReentrantLock代替。`
 
 `重入锁需要显示请求获取锁，并显示释放锁`。为了避免获得锁后，没有释放锁，而造成其它线程无法获得锁而造成死锁，一般建议将释放锁操作
 放在finally块里。
@@ -98,9 +114,20 @@ tryLock(long time, TimeUnit unit) 该方法试图获得锁，若该锁当前可�
 2）若等待期间当前线程被打断，则抛出InterruptedException；
 3）若等待时间结束仍未获得锁，则返回false。
 
+ReentrantLock类提供了一些高级功能，主要有以下3项：
+1.等待可中断，持有锁的线程长期不释放的时候，`正在等待的线程可以选择放弃等待`，这相当于Synchronized来说可以避免出现死锁的情况。
+2.公平锁，多个线程等待同一个锁时，`必须按照申请锁的时间顺序获得锁`，Synchronized锁非公平锁，`ReentrantLock默认的构造函数是创建的
+非公平锁`，可以通过参数true设为公平锁，但公平锁表现的性能不是很好。
+3.`锁绑定多个条件`，一个ReentrantLock对象可以同时绑定对个对象。
+
+### 公平锁 VS 非公平锁
+公平锁（Fair）：加锁前检查是否有排队等待的线程，`优先排队等待的线程，先来先得 `
+非公平锁（Nonfair）：加锁时不考虑排队等待问题，`直接尝试获取锁，获取不到自动到队尾等待`
+`非公平锁性能比公平锁高5~10倍`，因为公平锁需要在多核的情况下维护一个队列
+
 ### 读写锁（ReadWriteLock）
 对于读多写少的场景，一个读操作无须阻塞其它读操作，只需要保证读和写或者写与写不同时发生即可。此时，如果使用重入锁（即排它锁），
-对性能影响较大。Java中的读写锁（ReadWriteLock）就是为这种读多写少的场景而创造的。
+对性能影响较大。Java中的读写锁（ReadWriteLock）就是为这种`读多写少的场景`而创造的。
 
 实际上，ReadWriteLock接口并非继承自Lock接口，ReentrantReadWriteLock也只实现了ReadWriteLock接口而未实现Lock接口。
 ReadLock和WriteLock，是ReentrantReadWriteLock类的静态内部类，它们实现了Lock接口。
@@ -108,6 +135,42 @@ ReadLock和WriteLock，是ReentrantReadWriteLock类的静态内部类，它们�
 ### 条件锁
 条件锁只是一个帮助用户理解的概念，实际上并没有条件锁这种锁。对于每个重入锁，都可以通过newCondition()方法绑定若干个条件对象。
 
+### synchronize 锁
+使得该代码具有 原子性（atomicity）和 可见性（visibility）。原子性意味着一个线程一次只能执行由一个指定监控对象（lock）保护的代码，
+从而防止多个线程在更新共享状态时相互冲突。 可见性类似volatile关键字。
+synchronize的用法(修饰类，方法，代码块等)
+它的修饰对象有几种：
+- 修饰一个类，其作用的范围是synchronized后面括号`括起来的部分`， 作用的对象是`这个类的所有对象`。
+- 修饰一个方法，被修饰的方法称为同步方法，其`作用的范围是整个方法`， 作用的对象是`调用这个方法的对象`；
+- 修改一个静态的方法，其作用的范围是`整个静态方法`， 作用的对象是`这个类的所有对象`；
+- 修饰一个代码块，被修饰的代码块称为同步语句块，其作用的范围是`大括号{}括起来的代码， 作用的对象是调用这个代码块的对象；`
+
+
+### synchronize和ReentrantLock的区别
+
+（1）什么情况下可以使用 ReentrantLock
+使用synchronized 的一些限制： 
+- 无法中断正在等候获取一个锁的线程；
+- 无法通过投票得到一个锁；synchronized 是一个非公平锁， ReentrantLock 可以设置为公平锁
+- 释放锁的操作只能与获得锁所在的代码块中进行，无法在别的代码块中释放锁；
+ReentrantLock 没有以上的这些限制，且必须是手工释放锁。
+
+（2）简单对比
+主要相同点：Lock能完成synchronized所实现的所有功能
+主要不同点：Lock有比synchronized更精确的线程语义和更好的性能，当许多线程都在争用同一个锁时，使用 ReentrantLock 的总体开支通常要比
+ synchronized 少得多。 synchronized会自动释放锁，而`Lock一定要求程序员手工释放，并且必须在finally从句中释放`。
+
+#### 简单的总结
+#### synchronized：
+在资源竞争不是很激烈的情况下，偶尔会有同步的情形下，synchronized是很合适的。原因在于，编译程序通常会尽可能的进行优化synchronize，
+另外可读性非常好，不管用没用过5.0多线程包的程序员都能理解。
+#### ReentrantLock:
+ReentrantLock提供了多样化的同步，比如有时间限制的同步，可以被Interrupt的同步（synchronized的同步是不能Interrupt的）等。在资源竞争
+不激烈的情形下，性能稍微比synchronized差点点。但是当同步非常激烈的时候，synchronized的性能一下子能下降好几十倍。而ReentrantLock
+确还能维持常态。
+#### Atomic:
+和上面的类似，不激烈情况下，性能比synchronized略逊，而激烈的时候，也能维持常态。激烈的时候，Atomic的性能会优于ReentrantLock一倍左右。
+但是其有一个缺点，就是只能同步一个值，`一段代码中只能出现一个Atomic的变量，多于一个同步无效。`因为他不能在多个Atomic之间同步。
 
 ### Java NIO
 NIO（Non-blocking I/O，在Java领域，也称为New I/O），是一种同步非阻塞的I/O模型，也是I/O多路复用的基础，已经被越来越多地应用到
@@ -172,8 +235,64 @@ Method submit extends base method Executor.execute by creating and returning a F
 而最大的用处应该是第二点。
 3、submit方便Exception处理
 
-### 对象已死了吗
-引用计数算法 可达性分析算法( jvm 采用这个，从 root 开始检索)
+### 创建多线程的三种方法及其区别
+1. 新建类继承 Thread 类实现线程
+2. 通过实现接口 Runnable 实现创建线程
+3. 使用ExecutorService、Callable、Future实现有返回结果可抛异常的多线程(JDK5.0以后)
+`可返回值的任务必须实现Callable接口`，类似的，`无返回值的任务必须Runnable接口`。执行Callable任务后，可以获取一个Future的对象，
+在该对象上调用get就可以获取到Callable任务返回的Object了，再结合线程池接口ExecutorService就可以实现传说中有返回结果的多线程了。
+```java
+public class Test {  
+public static void main(String[] args) throws ExecutionException,  
+    InterruptedException {  
+   System.out.println("----程序开始运行----");  
+   Date date1 = new Date();  
+  
+   int taskSize = 5;  
+   // 创建一个线程池  
+   ExecutorService pool = Executors.newFixedThreadPool(taskSize);  
+   // 创建多个有返回值的任务  
+   List<Future> list = new ArrayList<Future>();  
+   for (int i = 0; i < taskSize; i++) {  
+    Callable c = new MyCallable(i + " ");  
+    // 执行任务并获取Future对象  
+    Future f = pool.submit(c);  
+    // System.out.println(">>>" + f.get().toString());  
+    list.add(f);  
+   }  
+   // 关闭线程池  
+   pool.shutdown();  
+  
+   // 获取所有并发任务的运行结果  
+   for (Future f : list) {  
+    // 从Future对象上获取任务的返回值，并输出到控制台  
+    System.out.println(">>>" + f.get().toString());  
+   }  
+  
+   Date date2 = new Date();  
+   System.out.println("----程序结束运行----，程序运行时间【"  
+     + (date2.getTime() - date1.getTime()) + "毫秒】");  
+}  
+}
+class MyCallable implements Callable<Object> {  
+    private String taskNum;  
+  
+    MyCallable(String taskNum) {  
+    this.taskNum = taskNum;  
+    }  
+  
+    public Object call() throws Exception {  
+       System.out.println(">>>" + taskNum + "任务启动");  
+       Date dateTmp1 = new Date();  
+       Thread.sleep(1000);  
+       Date dateTmp2 = new Date();  
+       long time = dateTmp2.getTime() - dateTmp1.getTime();  
+       System.out.println(">>>" + taskNum + "任务终止");  
+       return taskNum + "任务返回运行结果,当前任务时间【" + time + "毫秒】";  
+    }  
+}
+```
+
 
 ### 引用
 #### 强引用
@@ -188,11 +307,6 @@ Method submit extends base method Executor.execute by creating and returning a F
 最弱引用。一个对象是否有虚引用的存在，完全不会对其生存时间构成影响，也无法通过虚引用来来取得一个对象实例。为一个对象设置虚引用
 关联的`唯一目的`就是能在这个`对象被收集器回收时`收到`一个系统通知`。JDK 提供 `PhantomReference 类` 来实现虚引用。
 
-### java 反射
-#### getFields() 和 getDeclaredFields()
-getFields()获得某个类的所有的`公共（public）的字段`，包括父类。 
-getDeclaredFields()获得某个类的`所有申明的字段`，即包括`public、private 和 protected`，但是不包括父类的申明字段。 
-同样类似的还有getConstructors()和getDeclaredConstructors()，getMethods()和getDeclaredMethods()。
 
 ### 聚合
 聚在一起，弱的拥有关系，例如雁群和大雁  空心菱形表示
@@ -219,11 +333,11 @@ Servlet主要用于`控制逻辑。`在struts框架中,JSP位于MVC设计模式�
 而Token的状态是存储在客户端。
 
 ### 过滤器和拦截器的区别
-1、拦截器是基于java的反射机制的，而过滤器是基于函数回调
+1、`拦截器是基于java的反射机制的`，而`过滤器是基于函数回调`
 2、`过滤器依赖于servlet容器`，而拦截器不依赖于servlet容器
-3、拦截器只能对action请求起作用，而过滤器则可以对几乎所有的请求起作用
-4、拦截器可以访问action上下文、值栈里的对象，而过滤器不能
-5、在action的生命周期中，拦截器可以多次被调用，而过滤器只在容器初始化时调用一次
+3、`拦截器只能对action请求`起作用，而`过滤器则可以对几乎所有的请求起作用`
+4、`拦截器可以访问action上下文、值栈里的对象`，而过滤器不能
+5、在action的生命周期中，`拦截器可以多次被调用`，而`过滤器只在容器初始化时调用一次`
 - 拦截器(interceptor)(before after)：是在面向切面编程的就是在你的service或者一个方法，前调用一个方法，或者在方法后调用一个方法比如动态代理就是
 拦截器的简单实现，在你调用方法前打印出字符串（或者做其它业务逻辑的操作），也可以在你调用方法后打印出字符串，甚至在你抛出异常的时候做业务逻辑的操作。
 - 过滤器(filter)：是在Java Web中，你传入的request,response提前过滤掉一些信息，或者提前设置一些参数，然后再传入servlet或者struts
@@ -255,6 +369,7 @@ Java中的拦截器是`基于Java反射机制实现的，更准确的划分，�
   b) 分布式缓存
   c) 第三方缓存的实现
   
+
 ### spring工作机制及为什么要用?【spring是一个轻量的控制反转和面向切面的容器框架】
 1. springmvc把所有的请求都提交给DispatcherServlet,它会委托应用系统的其他模块负责对请求进行真正的处理工作。
 2. DispatcherServlet查询一个或多个HandlerMapping,找到处理请求的Controller.
@@ -317,6 +432,12 @@ web容器加载servlet，生命周期开始。通过调用servlet的init()方法
 - jsp:plugin：根据浏览器类型为Java插件生成OBJECT或EMBED标记
 
 ### 反射和代理
+### java 反射
+#### getFields() 和 getDeclaredFields()
+getFields()获得某个类的所有的`公共（public）的字段`，包括父类。 
+getDeclaredFields()获得某个类的`所有申明的字段`，即包括`public、private 和 protected`，但是不包括父类的申明字段。 
+同样类似的还有getConstructors()和getDeclaredConstructors()，getMethods()和getDeclaredMethods()。
+  
 #### Java 反射机制
 JAVA反射机制是在运行状态中，对于任意一个类，都能够知道这个`类的所有属性和方法`；对于任意一个`对象，都能够调用它的任意一个方法和属性`；
 这种`动态获取的信息`以及`动态调用对象的方法的功能`称为java语言的反射机制。 
@@ -327,6 +448,10 @@ JAVA反射机制是在运行状态中，对于任意一个类，都能够知道�
 ① Booststrap ClassLoader：此加载器采用C++编写，通常加载jre/lib/rt.jar，一般开发中是看不到的； 
 ② Extendsion ClassLoader：用来进行扩展类的加载，通常加载jre/lib/ext/*.jar; 
 ③ AppClassLoader：(默认)加载classpath指定的类，是最常使用的是一种加载器；
+
+### 你对Spring的理解，Spring里面的代理是怎么实现的，如果让你设计，你怎么设计
+   
+### Spring IOC 
 
 ### Java 集合框架基本接口有哪些
 Collection：代表一组对象，每一个对象都是它的子元素。
@@ -387,7 +512,8 @@ JAVA的JVM的内存可分为3个区：堆(heap)、栈(stack)和方法区(method)
  } 
 ```
 
-
+### 对象已死了吗
+引用计数算法 可达性分析算法( jvm 采用这个，从 root 开始检索)
 ### GC 需要完善
 #### 你能不能谈谈，GC是在什么时候，对什么东西，做了什么事情？
 #### 什么时候
@@ -436,9 +562,7 @@ GC Root Tracing 算法思路就是通过一系列的名为"GC  Roots"的对象�
 ####（9）在heap中没有类实例的时候，类信息还存在于JVM吗？ 存在于什么地方？
 
 
-### 你对Spring的理解，Spring里面的代理是怎么实现的，如果让你设计，你怎么设计
-   
-### Spring IOC 
+
 
 ### Struts和springmvc的区别，两者分别是多线程还是单线程的
 
@@ -449,19 +573,79 @@ GC Root Tracing 算法思路就是通过一系列的名为"GC  Roots"的对象�
 3. 虚拟节点，虚拟节点是实际节点(服务器)的复制点。使得 Hash 环分配均匀。
 
 
-### 创建多线程的三种方法及其区别
 
-### synchronize和ReentrantLock的区别
+### Java8 新增了非常多的特性，我们主要讨论以下几个：
+- Lambda 表达式 − Lambda允许把函数作为一个方法的参数（函数作为参数传递进方法中。->
+- 方法引用 − 方法引用提供了非常有用的语法，可以直接引用已有Java类或对象（实例）的方法或构造器。与lambda联合使用，方法引用可以使语言
+的构造更紧凑简洁，减少冗余代码。 `方法引用使用一对冒号(::)。`
+- 函数式接口 - 函数式接口可以被隐式转换为lambda表达式。函数式接口可以现有的函数友好地支持 lambda。
+- 默认方法 − 默认方法就是一个在`接口里面有了一个实现的方法。`
+- 新工具 − 新的编译工具，如：Nashorn引擎 jjs、 类依赖分析器jdeps。
+- Stream API −新添加的Stream API（java.util.stream） 把真正的`函数式编程风格引入到Java中。`
+List<Integer> transactionsIds = 
+widgets.stream()
+             .filter(b -> b.getColor() == RED)
+             .sorted((x,y) -> x.getWeight() - y.getWeight())
+             .mapToInt(Widget::getWeight)
+             .sum();
+             
+- Date Time API − `加强对日期与时间的处理。`
+// 获取当前的日期时间
+LocalDateTime currentTime = LocalDateTime.now();
 
-synchronize的用法(修饰类，方法，代码块等)
+- Optional 类 − Optional 类已经成为 Java 8 类库的一部分，用来解决空指针异常。`允许为 null`
+- Nashorn, JavaScript 引擎 − Java 8提供了一个新的Nashorn javascript引擎，它允许我们在JVM上运行特定的javascript应用。
+- concurrent 包修改 ConcurrentHashMap 大数组、HashEntry 里面值超过8个自动转为红黑树,Java 8在链表长度超过一定`阈值（8）`时
+将链表（寻址时间复杂度为O(N)）转换为`红黑树`（寻址时间复杂度为O(log(N))）。
+
+- Base64 在Java 8中，Base64编码已经成为Java类库的标准。Java 8 内置了 Base64 编码的编码器和解码器。
+ // 使用基本编码
+String base64encodedString = Base64.getEncoder().encodeToString("runoob?java8".getBytes("utf-8"));
+
+### Jdk9 
+jdk9将对Unsafe方法调整， sun.misc.Unsafe 将全部实现委托给 jdk.internal.misc.Unsafe
+Unsafe 利用反射
+- `对象的反序列化` 控制好字节，比如 int 4个字节
+- `线程安全的直接获取内存` Unsafe的另外一个用途是线程安全的获取非堆内存。ByteBuffer函数也能使你安全的获取非堆内存或是DirectMemory，
+但它不会提供任何线程安全的操作。你在进程间共享数据时使用Unsafe尤其有用。
+FileChannel fc = new RandomAccessFile(counters, "rw").getChannel()
+MappedByteBuffer mbb = fc.map(FileChannel.MapMode.READ_WRITE, 0, 1024);
+
+Field theUnsafe = Unsafe.class.getDeclaredField("theUnsafe");
+theUnsafe.setAccessible(true);
+long value = UNSAFE.`getLongVolatile`(null, address);
+UNSAFE.`compareAndSwapLong`(null, address, value, value + 1)
 
 
+### CAS Compare And Swap
+#### CAS 算法大致原理是
+从最基础的 Java 中的 i++ 操作来说，`i++ 并非原子操作`，实质上相当于先读取 i 值，然后在内存中创建缓存变量保存 ++ 后结果，最后写会变
+量 i；而在这期间 i 变量都可能被其他线程读或写，从而造成线程安全性问题
+在对变量进行计算之前(如 ++ 操作)，首先读取原变量值，称为 `旧的预期值 A`，然后在更新之前再获取当前内存中的值，称为 `当前内存值 V`，如果
+ A==V 则说明变量从未被其他线程修改过，此时将会写入新值 B，如果 A!=V 则说明变量已经被其他线程修改过，当前线程应当什么也不做；
+ 
+#### openjdk 中 CAS 实现
+翻了一下 AtomicInteger 的源码，发现其实质上都会调用到 Unsafe 类中的方法，而` Unsafe 中大部分方法是 native `的，也就是说实质使用
+ JNI 上调用了 `C 来沟通底层硬件完成 CAS`；
+ 
+#### CAS 缺点
 
-
-
-
-
-
+##### ABA 问题
+由于 CAS 设计机制就是获取某两个时刻(初始预期值和当前内存值)变量值，并进行比较更新，所以说如果在获取初始预期值和当前内存值这段时间
+间隔内，`变量值由 A 变为 B 再变为 A`，那么对于 CAS 来说是不可感知的，但实际上变量已经发生了变化；解决办法是在每次获取时`加版本号`，
+并且每次更新对版本号 +1，这样当发生 ABA 问题时通过版本号可以得知变量被改动过
+JDK 1.5 以后的 `AtomicStampedReference 类就提供了此种能力`，其中的 `compareAndSet `方法就是 首先检查当前引用是否等于预期引用，
+并且当前标志是否等于预期标志，如果全部相等，则以原子方式将该引用和该标志的值设置为给定的更新值。
+##### 循环时间长开销大
+所谓循环时间长开销大问题就是当 CAS 判定变量被修改了以后则放弃本次修改，`但往往为了保证数据正确性该计算会以循环的方式再次发起 CAS，`
+如果多次 CAS 判定失败，则会产生`大量的时间消耗和性能浪费`；如果JVM能支持处理器提供的pause指令那么效率会有一定的提升，pause指令有两个
+作用，第一它可以延迟流水线执行指令（de-pipeline）,使CPU不会消耗过多的执行资源，延迟的时间取决于具体实现的版本，在一些处理器上延迟
+时间是零。第二它可以避免在退出循环的时候因内存顺序冲突（memory order violation）而引起CPU流水线被清空（CPU pipeline flush），
+从而提高CPU的执行效率。
+##### 只能保证一个共享变量的原子操作
+CAS 只对单个共享变量有效，当操作涉及跨`多个共享变量时 CAS 无效`；
+比如有两个共享变量i＝2,j=a，合并一下ij=2a，然后用CAS来操作ij。
+从 JDK 1.5开始提供了 AtomicReference 类来保证引用对象之间的原子性，你可以把`多个变量放在一个对象`里来进行 CAS 操作
 
 
 #### 正则表达式
