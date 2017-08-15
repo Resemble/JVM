@@ -145,9 +145,19 @@ synchronize的用法(修饰类，方法，代码块等)
 - 修改一个静态的方法，其作用的范围是`整个静态方法`， 作用的对象是`这个类的所有对象`；
 - 修饰一个代码块，被修饰的代码块称为同步语句块，其作用的范围是`大括号{}括起来的代码， 作用的对象是调用这个代码块的对象；`
 
+### synchronize 和 Lock 区别
+- 用法不一样
+synchronize 既可以加在方法上，也可以加在特定代码块中，括号中表示需要锁的对象。而 Lock 需要显式地指定起始位置和终止位置。
+synchronize 交给 JVM 执行，而 Lock 地锁定是通过代码实现的。
+- 性能不一样 
+在资源竞争不激烈时，synchronize 性能高；竞争激励 ReentrantLock 性能基本不变，synchronize 性能下降很厉害
+- 锁机制不一样 
+synchronize 获得锁和释放锁的方式都是在块结构中，当获得多个锁时，必须以相反的顺序释放，并且是自动解锁的。
+Lock一定要求程序员手工释放，并且必须在finally从句中释放。Lock 的 tryLock() 方法可以采用非阻塞(zu se)方式获取锁。
+
 
 ### synchronize和ReentrantLock的区别
-
+ReentrantLock 是 Lock 接口的实现类
 （1）什么情况下可以使用 ReentrantLock
 使用synchronized 的一些限制： 
 - 无法中断正在等候获取一个锁的线程；
@@ -171,6 +181,7 @@ ReentrantLock提供了多样化的同步，比如有时间限制的同步，可�
 #### Atomic:
 和上面的类似，不激烈情况下，性能比synchronized略逊，而激烈的时候，也能维持常态。激烈的时候，Atomic的性能会优于ReentrantLock一倍左右。
 但是其有一个缺点，就是只能同步一个值，`一段代码中只能出现一个Atomic的变量，多于一个同步无效。`因为他不能在多个Atomic之间同步。
+大部分采用 CAS 
 
 ### Java NIO
 NIO（Non-blocking I/O，在Java领域，也称为New I/O），是一种同步非阻塞的I/O模型，也是I/O多路复用的基础，已经被越来越多地应用到
@@ -557,11 +568,116 @@ GC Root Tracing 算法思路就是通过一系列的名为"GC  Roots"的对象�
 内存分配： 内存空间上是固定的        空间在各个附属类里面分配 
 分配顺序： 先分配静态对象的空间      继而再对非静态对象分配空间,也就是初 始化顺序是先静态                      
 
-####（8）Java类的加载过程？
+###（8）Java类的加载过程？ 7阶段
+加载 -> 验证 -> 准备 -> 解析 -> 初始化 -> 使用 -> 卸载
+       (      连接         )
+- 加载
+根据查找路径找到相对应的 class 文件，然后导入
+“加载”(Loading)阶段是“类加载”(Class Loading)过程的第一个阶段，在此阶段，虚拟机需要完成以下三件事情：
+1、 通过一个类的`全限定名来获取定义此类的二进制字节流。`
+ 如Object类， 在源文件中的全限定名是java.lang.Object 。 而class文件中的全限定名是将点号替换成“/” 。 例如， Object类在class文件中的全限定名是 java/lang/Object 
+2、 将这个字节流所代表的`静态存储结构转化为方法区的运行时数据结构`。
+3、 在`Java堆中生成一个代表这个类的java.lang.Class对象`，作为方法区这些数据的访问入口。
+加载阶段即可以使用系统提供的类加载器在完成，也可以由用户自定义的类加载器来完成。加载阶段与连接阶段的部分内容(如一部分字节码文件格式验证动作)是交叉进行的，加载阶段尚未完成，连接阶段可能已经开始。
 
-####（9）在heap中没有类实例的时候，类信息还存在于JVM吗？ 存在于什么地方？
+- 验证
+检查待加载的 class 文件的正确性
+验证是连接阶段的第一步，这一阶段的目的是为了确保Class文件的字节流中包含的信息符合当前虚拟机的要求，并且不会危害虚拟机自身的安全。
+Java语言本身是相对安全的语言，使用Java编码是无法做到如访问数组边界以外的数据、将一个对象转型为它并未实现的类型等，如果这样做了，编译器将拒绝编译。但是，Class文件并不一定是由Java源码编译而来，可以使用任何途径，包括用十六进制编辑器(如UltraEdit)直接编写。如果直接编写了有害的“代码”(字节流)，而虚拟机在加载该Class时不进行检查的话，就有可能危害到虚拟机或程序的安全。
+文件格式验证: 是要验证字节流是否符合Class文件格式的规范，并且能被当前版本的虚拟机处理。
+元数据验证: 是对字节码描述的信息进行语义分析，以保证其描述的信息符合Java语言规范的要求
+字节码验证: 主要工作是进行数据流和控制流分析，保证被校验类的方法在运行时不会做出危害虚拟机安全的行为
+符号引用验证: 发生在虚拟机将符号引用转化为直接引用的时候，这个转化动作将在“解析阶段”中发生。验证符号引用中通过字符串描述的权限定名是否能找到对应的类；在指定类中是否存在符合方法字段的描述符及简单名称所描述的方法和字段；符号引用中的类、字段和方法的访问性(private、protected、public、default)是否可被当前类访问
+
+- 准备
+准备阶段是`为类的静态变量分配内存并将其初始化为默认值`，这些内存都将在方法区中进行分配。准备阶段不分配类中的实例变量的内存，实例变量将会在对象实例化时随着对象一起分配在Java堆中。
+ public static int value=123;//在准备阶段value初始值为0 。在初始化阶段才会变为123 
+ 
+-解析
+解析阶段是虚拟机将常量池内的`符号引用替换为直接引用`的过程。
+符号引用（Symbolic Reference）：符号引用以一组符号来描述所引用的目标，`符号可以是任何形式的字面量，只要使用时能无歧义地定位到目标即可`。符号引用与虚拟机实现的内存布局无关，引用的目标并不一定已经加载到内存中。
+直接引用（Direct Reference）：直接引用可以是直接指向`目标的指针、相对偏移量或是一个能间接定位到目标的句柄。`直接引用是与虚拟机实现的内存布局相关的，如果有了直接引用，那么引用的目标必定已经在内存中存在。
+
+- 初始化
+类初始化是类加载过程的最后一步，前面的类加载过程，除了在加载阶段用户应用程序可以通过自定义类加载器参与之外，其余动作完全由虚拟机主导和控制。到了初始化阶段，才真正开始执行类中定义的Java程序代码。
+收集类中的`所有类变量的赋值动作和静态语句块(static{}块)`中的语句合并产生的。
+
+#### 3个类加载器
+- Bootstrap Loader 负责加载`系统类` 启动类加载器
+- ExtClassLoader 负责加载`扩展类`
+- AppClassLoader 负责加载`应用类`
+ 
+#### 双亲委派模型 
+AppClassLoader -> ExtClassLoader -> BootStrapClassLoader 找到 ？ 结束 : -> ExtClassLoader 找到 ？ 结束 : -> AppClassLoader
+双亲委派模型的工作流程是：如果一个类加载器收到了类加载的请求，`它首先不会自己去尝试加载这个类，而是把请求委托给父加载器去完成，依次向上，`
+因此，所有的类加载请求最终都应该被传递到顶层的启动类加载器中，只有当父加载器在它的搜索范围中没有找到所需的类时，即无法完成该加载，
+子加载器才会尝试自己去加载该类。
+##### 双亲委派机制:
+1、当AppClassLoader加载一个class时，它首先不会自己去尝试加载这个类，而是把类加载请求委派给父类加载器ExtClassLoader去完成。
+2、当ExtClassLoader加载一个class时，它首先也不会自己去尝试加载这个类，而是把类加载请求委派给BootStrapClassLoader去完成。
+3、如果BootStrapClassLoader加载失败（例如在$JAVA_HOME/jre/lib里未查找到该class），会使用ExtClassLoader来尝试加载；
+4、若ExtClassLoader也加载失败，则会使用AppClassLoader来加载，如果AppClassLoader也加载失败，则会报出异常ClassNotFoundException。
+Java类随着它的类加载器一起具备了一种带有优先级的层次关系。例如类Object，它放在rt.jar中，无论哪一个类加载器要加载这个类，
+最终都是委派给启动类加载器进行加载，因此Object类在程序的各种类加载器环境中都是同一个类
+判断两个类是否相同是通过classloader.class这种方式进行的，所以哪怕是同一个class文件如果被两个classloader加载，那么他们也是不同的类
+##### 双亲委派模型意义：
+- 系统类防止内存中出现多份同样的字节码
+- 保证Java程序安全稳定运行
+ 
+ 
+### 说出Servlet的生命周期  5阶段                                                                
+加载 -> 创建实例 -> 初始化(init) -> 处理客户端请求(service) -> 销毁(destroy)
+Servlet被服务器`实例化`后，容器运行其`init`方法，请求到达时运行其`service`方法，service方法自动派遣运行与请求对应的doXXX方法
+（doGet，doPost）等，当服务器决定将实例销毁的时候调用其`destroy方`法。
+#### 并说出Servlet和CGI的区别
+与cgi的区别在于servlet处于服务器进程中，它通过`多线程方式运行其service方法`，一个实例可以服务于多个请求，并且其实例一般不会销毁，
+而`CGI对每个请求都产生新的进程`，服务完成后就销毁，所以效率上低于servlet
+
+#### 在heap中没有类实例的时候，类信息还存在于JVM吗？ 存在于什么地方？
 
 
+#### Java concurrent 包的常用类
+- Executor                  ：具体Runnable任务的执行者。Executor接口是所有线程执行类的父接口，这个接口可以建立线程池，然后执行线程。
+
+- ExecutorService           ：一个线程池管理者，其实现类有多种，我会介绍一部分。我们能把Runnable,Callable提交到池中让其调度。
+
+- Semaphore                 ：一个计数信号量
+信号量Semaphore是一个计数信号量，用来保护一个或多个共享资源的访问，是Java Concurrent包下提供的另一种同步方式，就像synchronized
+一样的呢，它就是替代synchronized的。 Semaphore可以控制某个资源可被同时访问的个数，通过 acquire() 获取一个许可，如果没有就等待，
+而 release() 释放一个许可。
+
+- Condition 
+其中，Lock 替代了 synchronized 方法和语句的使用，Condition 替代了 Object 监视器方法的使用。
+在Condition中，用await()替换wait()，用signal()替换notify()，用signalAll()替换notifyAll()，传统线程的通信方式，Condition都可以实现，这里注意，Condition是被绑定到Lock上的，要创建一个Lock的Condition必须用newCondition()方法。
+Condition的强大之处在于它可以为多个线程间建立不同的Condition， 使用synchronized\/wait()只有一个阻塞队列，notifyAll会唤起所有阻塞队列下的线程，而使用lock\/condition，可以实现多个阻塞队列，signalAll只会唤起某个阻塞队列下的阻塞线程。
+
+- ReentrantLock             ：一个可重入的互斥锁定 Lock，功能类似synchronized，但要强大的多。
+
+- Callable                  ：Callable接口与Runnable接口实现的功能都是一样的，`不过它有返回值的 抛异常`，我们可以知道线程是否执行完毕呢。通常与Future，FutureTask连着用。
+
+- Future                    ：可以得到Callable接口与Runnable接口执行的返回值，也可以调用cancel方法取消线程的执行。
+`Future就是对于具体的Runnable或者Callable任务的执行结果进行取消、查询是否完成、获取结果`。必要时可以通过get方法获取执行结果，该方法会阻塞直到任务返回结果。
+也就是说Future提供了三种功能：
+1）判断任务是否完成；
+2）能够中断任务；
+3）能够获取任务执行结果。
+因为Future只是一个接口，所以是无法直接用来创建对象使用的，因此就有了下面的FutureTask。
+
+- BlockingQueue             ：阻塞队列。
+生产者消费者问题中，如果不用阻塞队列，采用非阻塞队列存放产品的话，需要用synchronized来对produce()和consume()操作进行同步，而采用
+阻塞队列就不需要这样了，`它自身就带同步功能，当空时自然不能取，满时自然不能继续生产`，这就是BlockingQueue的作用。
+阻塞队列使用最经典的场景就是socket客户端数据的读取和解析，读取数据的线程不断将数据放入队列，然后解析线程不断从队列取数据解析。
+还有其他类似的场景，只要符合生产者-消费者模型的都可以使用阻塞队列。
+
+- ThreadLocal
+线程私有变量，就是我们在建立类的时候可以把成员变量声明为线程私有的， 最常见的ThreadLocal使用场景为 用来解决 `数据库连接、Session管理`等。 
+ThreadLocal为变量在每个线程中都创建了一个`副本`，那么每个线程可以访问自己内部的副本变量。
+准确的说，应该是ThreadLocal类型的变量内部的注册表（Map<Thread,T>）发生了变化，但ThreadLocal类型的变量本身的确是一个，这才是本质！+
+虽然ThreadLocal变量只有一个，各个线程共享，但是`线程内部维护一个ThreadLocalMap<Thread,T>，通过线程Id每个线程都维护唯一的一个变量`。
+
+- CompletionService         : ExecutorService的扩展，可以获得线程执行结果的
+- CountDownLatch            ：一个同步辅助类，在完成一组正在其他线程中执行的操作之前，它允许一个或多个线程一直等待。 
+- CyclicBarrier             ：一个同步辅助类，它允许一组线程互相等待，直到到达某个公共屏障点 
 
 
 ### Struts和springmvc的区别，两者分别是多线程还是单线程的
@@ -616,7 +732,8 @@ theUnsafe.setAccessible(true);
 long value = UNSAFE.`getLongVolatile`(null, address);
 UNSAFE.`compareAndSwapLong`(null, address, value, value + 1)
 
-
+### Atomic
+Java.util.concurrent.atomic包中几乎大部分类都采用了CAS操作
 ### CAS Compare And Swap
 #### CAS 算法大致原理是
 从最基础的 Java 中的 i++ 操作来说，`i++ 并非原子操作`，实质上相当于先读取 i 值，然后在内存中创建缓存变量保存 ++ 后结果，最后写会变
@@ -629,7 +746,6 @@ UNSAFE.`compareAndSwapLong`(null, address, value, value + 1)
  JNI 上调用了 `C 来沟通底层硬件完成 CAS`；
  
 #### CAS 缺点
-
 ##### ABA 问题
 由于 CAS 设计机制就是获取某两个时刻(初始预期值和当前内存值)变量值，并进行比较更新，所以说如果在获取初始预期值和当前内存值这段时间
 间隔内，`变量值由 A 变为 B 再变为 A`，那么对于 CAS 来说是不可感知的，但实际上变量已经发生了变化；解决办法是在每次获取时`加版本号`，
@@ -645,7 +761,17 @@ JDK 1.5 以后的 `AtomicStampedReference 类就提供了此种能力`，其中�
 ##### 只能保证一个共享变量的原子操作
 CAS 只对单个共享变量有效，当操作涉及跨`多个共享变量时 CAS 无效`；
 比如有两个共享变量i＝2,j=a，合并一下ij=2a，然后用CAS来操作ij。
-从 JDK 1.5开始提供了 AtomicReference 类来保证引用对象之间的原子性，你可以把`多个变量放在一个对象`里来进行 CAS 操作
+从 JDK 1.5开始提供了 `AtomicReference 类来保证引用对象之间的原子性`，你可以把`多个变量放在一个对象`里来进行 CAS 操作
+
+### volatile
+volatile可以保证`线程可见性`且提供了一定的`有序性`，`但是无法保证原子性`。在JVM底层volatile是采用“内存屏障”来实现的。内存屏障(Memory Barriers)是一组处理器指令，用于实现对内存操作的顺序限制。
+上面那段话，有两层语义
+- 保证可见性、不保证原子性
+- 禁止指令重排序
+synchronized，只有在某些场合才能够使用volatile。使用它必须满足如下两个条件：
+- 对变量的写操作不依赖当前值；
+- 该变量没有包含在具有其他变量的不变式中。
+volatile经常用于两个两个场景：`状态标记、double check`
 
 
 #### 正则表达式
