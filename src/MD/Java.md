@@ -456,9 +456,112 @@ JAVA反射机制是在运行状态中，对于任意一个类，都能够知道�
 ② Extendsion ClassLoader：用来进行扩展类的加载，通常加载jre/lib/ext/*.jar; 
 ③ AppClassLoader：(默认)加载classpath指定的类，是最常使用的是一种加载器；
 
+### 面向切面(AOP),原理是什么 
+- AOP技术是建立在Java语言的`反射机制与动态代理机制`之上的。业务逻辑组件在运行过程中，AOP容器会动态创建一个`代理对象`供使用者调用，
+该代理对象已经按Java EE程序员的意图将切面成功切入到目标方法的`连接点`上，从而使`切面的功能与业务逻辑的功能同时得以执行`。从原理上讲，
+调用者直接调用的其实是`AOP容器动态生成的代理对象`，再由代理对象调用目标对象完成原始的业务逻辑处理，而`代理对象则已经将切面与业务逻辑方法进行了合成`。
+- AOP在Java里是利用反射机制实现（你也可以认为是动态代理，不过动态代理也是反射机制实现的）
+- 面向切面编程AOP技术就是为解决这个问题而诞生的，`切面就是横切面`(类似有日志切面、权限切面)，抽取众多方法中的所有共有代码，放置到某个地方集中管理，然后在具体运行时，再由容器动态织入这些共有代码。
+
+切面（Aspect）：其实就是共有功能的实现。如`日志切面、权限切面、事务切面`等。在实际应用中通常是一个存放共有功能实现的普通Java类，之所以能被AOP容器识别成切面，是在配置中指定的。
+通知（Advice）：是切面的具体实现。以目标方法为参照点，根据放置的地方不同，可分为`前置通知（Before）、后置通知（AfterReturning）、异常通知（AfterThrowing）、最终通知（After）与环绕通知（Around）5种`。在实际应用中通常是切面类中的一个方法，具体属于哪类通知，同样是在配置中指定的。
+
 ### 你对Spring的理解，Spring里面的代理是怎么实现的，如果让你设计，你怎么设计
-   
-### Spring IOC 
+AOP呢，它实现的就是容器的另一大好处了，就是可以让容器中的对象都享有容器中的公共服务。
+代理模式是一种静态代理，而动态代理就是利用反射和动态编译将代理模式变成动态的。原理跟动态注入一样，`代理模式在编译的时候就已经确定代理类
+将要代理谁，而动态代理在运行的时候才知道自己要代理谁`。
+Spring的动态代理有两种：`一是JDK的动态代理`；`另一个是cglib动态代理（通过修改字节码来实现代理）`
+如果使用JDK的Proxy来生成代理对象，那么需要通过`InvocationHandler`来设置拦截器回调； 而如果使用CGLIB来生成代理对象，
+就需要根据CGLIB的使用要求，通过`DynamicAdvisedInterceptor`来完成回调。
+1.JDK动态代理
+此时代理对象和目标对象实现了相同的接口，目标对象作为代理对象的一个属性，具体接口实现中，可以在调用目标对象相应方法前后加上其他业务处理逻辑。
+代理模式在实际使用时需要指定具体的目标对象，如果为每个类都添加一个代理类的话，会导致类很多，同时如果不知道具体类的话，怎样实现代理模式呢？这就引出动态代理。
+JDK动态代理只能针对实现了接口的类生成代理。
+2.CGLIB代理 动态字节码生成（cglib）
+CGLIB（CODE GENERLIZE LIBRARY）代理是针对类实现代理，
+主要是对指定的类生成一个子类，覆盖其中的所有方法，所以该类或方法不能声明称final的。
+#### JDK动态代理和CGLIB代理生成的区别
+- `JDK动态代理只能对实现了接口的类生成代理`，而不能针对类。
+- `CGLIB是针对类实现代理`，主要是对指定的类生成一个子类，覆盖其中的方法 。因为是继承，所以该类或方法最好不要声明成final ，final可以阻止继承和多态。
+
+
+Spring 框架的一个关键组件是面向方面的编程(AOP)框架。面向方面的编程需要把程序逻辑分解成不同的部分称为所谓的关注点。跨一个应用程序的
+多个点的功能被称为横切关注点，这些横切关注点在概念上独立于应用程序的业务逻辑。有各种各样的常见的很好的方面的例子，如`日志记录、审计、
+声明式事务、安全性和缓存等`。
+在 `OOP 中，关键单元模块度是类`，而在 `AOP 中单元模块度是方面`。依赖注入帮助你对应用程序对象相互解耦和 AOP 可以帮助你从它们所影响的对象
+中对横切关注点解耦。
+Spring AOP 模块提供拦截器来拦截一个应用程序，例如，当执行一个方法时，你可以在方法执行之前或之后添加额外的功能。
+在典型的面向对象开发方式中，可能要将日志记录语句放在所有方法和 Java 类中才能实现日志功能。在 AOP 方式中，可以反过来将日志服务模块化，
+并以声明的方式将它们应用到需要日志的组件上。当然，优势就是 Java 类不需要知道日志服务的存在，也不需要考虑相关的代码。所以，用 Spring 
+AOP 编写的应用程序代码是松散耦合的。 AOP 的功能完全集成到了 Spring 事务管理、日志和其他各种特性的上下文中。
+Spring AOP中，当拦截对象实现了接口时，生成方式是用JDK的Proxy类。当没有实现任何接口时用的是GCLIB开源项目生成的拦截类的子类.
+
+#### AOP:面向切面、面向方面、面向接口是一种横切技术 
+横切技术运用： 
+1.事务管理: (1)数据库事务:(2)编程事务(3)声明事物:Spring AOP-->声明事物    
+2.日志处理: 
+3.安全验证: Spring AOP---OOP升级   
+#### 静态代理原理：目标对象：调用业务逻辑    代理对象：日志管理 
+表示层调用--->代理对象(日志管理)-->调用目标对象
+#### 动态代理原理：spring AOP采用动态代理来实现 
+(1)实现InvocationHandler接口
+(2)创建代理类(通过java API)
+Proxy.newProxyInstance(动态加载代理类,代理类实现接口,使用handler);
+(3)调用invoke方法(虚拟机自动调用方法)
+日志处理 
+ //调用目标对象 
+ method.invoke("目标对象","参数"); 
+ 日志处理
+通过代理对象--(请求信息)-->目标对象---(返回信息)----> 代理对象
+```java
+class JdkDPQueryHandler implements InvocationHandler{
+    private Arithmetic real;
+    public JdkDPQueryHandler(Arithmetic real){
+        this.real = real;
+    }
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        String methodName = method.getName();
+        System.out.println(method);
+        System.out.println("the method: " + methodName + "开始, 参数: "+Arrays.asList(args));
+        Object result = method.invoke(real, args);
+        System.out.println("the method: "+methodName+"结束, 结果: " + result);
+        return result;
+    }
+}
+public class Main{
+    private static int a = 4, b = 2;
+    
+    public static Object createJDKProxy(Arithmetic real){
+        Object proxyArithmetic = Proxy.newProxyInstance(real.getClass().getClassLoader(),
+                real.getClass().getInterfaces(), new JdkDPQueryHandler(real)); 
+        return proxyArithmetic;
+    }
+    
+    public static void main(String[] args){
+        Arithmetic real = new Arithmetic();
+        Object proxyArithmetic = createJDKProxy(real);
+        ((AddInterface)proxyArithmetic).add(a, b);
+        ((SubInterface)proxyArithmetic).sub(a, b);
+    }
+}
+```
+
+
+
+
+### Spring IOC (Inversion of Control控制反转) 即依赖注入（Dependency Injection）
+简单的说，Spring就是通过工厂+反射将我们的bean放到它的容器中的，当我们想用某个bean的时候，只需要调用getBean("beanID")方法。
+为了解决对象之间的耦合度过高的问题
+获得依赖对象的过程被反转了。控制被反转之后，获得依赖对象的过程由自身管理变为了由IOC容器主动注入。
+`通过引入IOC容器，利用依赖关系注入的方式，实现对象之间的解耦。`
+我们可以把IOC容器的工作模式看做是`工厂模式的升华`，可以把IOC容器看作是一个工厂，这个工厂里要生产的对象都在配置文件中给出定义，然后利用
+编程语言的的反射编程，根据配置文件中给出的类名生成相应的对象。从实现来看，IOC是把以前在工厂方法里写死的对象生成代码，改变为由配置文件
+来定义，也就是把工厂和对象生成这两者独立分隔开来，目的就是提高灵活性和可维护性。
+
+
+### 面向对象思想
+简单来说就是把复杂系统分解成相互合作的对象，这些对象类通过封装以后，内部实现对外部是透明的，从而降低了解决问题的复杂度，而且可以灵活地被重用和扩展。
 
 ### Java 集合框架基本接口有哪些
 Collection：代表一组对象，每一个对象都是它的子元素。
@@ -518,6 +621,8 @@ JAVA的JVM的内存可分为3个区：堆(heap)、栈(stack)和方法区(method)
      }
  } 
 ```
+### JMM
+Java Memory Model java内存模型 
 
 ### 对象已死了吗
 引用计数算法 可达性分析算法( jvm 采用这个，从 root 开始检索)
@@ -620,7 +725,12 @@ Java类随着它的类加载器一起具备了一种带有优先级的层次关�
 - 系统类防止内存中出现多份同样的字节码
 - 保证Java程序安全稳定运行
  
- 
+### java 程序初始化顺序
+详见 java 面试宝典 p50
+父类静态变量 父类静态代码块 子类静态变量 子类静态代码块 父类非静态变量 父类非静态代码块 父类构造函数 子类非静态变量 子类非静态代码块 子类构造函数
+`注意没有方法，这也是单例模式内部静态类 lazy loading 延迟加载 的原因，当然还是线程安全的`
+
+
 ### 说出Servlet的生命周期  5阶段                                                                
 加载 -> 创建实例 -> 初始化(init) -> 处理客户端请求(service) -> 销毁(destroy)
 Servlet被服务器`实例化`后，容器运行其`init`方法，请求到达时运行其`service`方法，service方法自动派遣运行与请求对应的doXXX方法
@@ -778,6 +888,16 @@ volatile经常用于两个两个场景：`状态标记、double check`
 在32位solaris的机器上，堆最大可以达到2G 
 而在64位的操作系统上，32位的JVM，堆大小可以达到4G 
 
+
+### 维持一个固定大小的最大最小堆就是维持一个固定大小的 Array
+
+
+### Mybatis 使用
+##### {}和${}的区别是什么？
+{}是预编译处理，${}是字符串替换。
+Mybatis在处理#{}时，会将sql中的`#{}替换为?号`，调用PreparedStatement的set方法来赋值；
+Mybatis在处理${}时，就是把`${}替换成变量的值`。
+使用#{}可以有效的`防止SQL注入`，提高系统安全性。
 
 #### 正则表达式
 \       将下一字符标记为特殊字符、文本、反向引用或八进制转义符。例如，"n"匹配字符"n"。"\n"匹配换行符。序列"\\"匹配"\"，"\("匹配"("。
