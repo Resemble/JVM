@@ -343,5 +343,39 @@ ip段/数字-如192.168.0.1/24是什么意思?
 
 
 
+
+#### Http 请求头(Request Header) 响应头(Response Header) 字段
+
+##### Request Headers
+Accept:*/*
+Accept-Encoding:gzip, deflate
+Accept-Language:zh-CN,zh;q=0.8
+Connection:keep-alive
+Content-Length:297
+Content-Type:application/x-www-form-urlencoded; charset=UTF-8
+Cookie:__smScrollBoxOptOut=true; _ga=GA1.2.845410506.1486610788; __utma=213602508.845410506.1486610788.1502869057.1502896422.39; __utmc=213602508; __utmz=213602508.1502896425.39.37.utmcsr=google|utmccn=(organic)|utmcmd=organic|utmctr=(not%20provided); Hm_lvt_5101210b73a0e033d1509b3e487c929c=1502805825,1502869059,1502896424,1502896428; Hm_lpvt_5101210b73a0e033d1509b3e487c929c=1502896428; infoq_hab=oooy; __smToken=aRCxOMxFjjXA3v6RwWdEeYz6; JSESSIONID=2BDFCCE5BA92D68AEDD96CFDF6B70785; UserCookie=bcQxKCTrJZU6d66ckNuL8MqebzpkJccI
+Host:www.infoq.com
+Origin:http://www.infoq.com
+Referer:http://www.infoq.com/cn/articles/key-steps-and-likely-problems-of-split-table
+User-Agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36
+
+###### Response Header
+Accept-Ranges:none
+Access-Control-Allow-Credentials:true
+Access-Control-Allow-Origin:https://www.infoq.com
+Cache-Control:no-cache
+Connection:close
+Content-Length:1869
+Content-Type:application/json;charset=utf-8
+Date:Thu, 17 Aug 2017 02:02:01 GMT
+Server:Apache
+Sniply-Options:BLOCK
+Vary:Accept-Encoding,User-Agent
+
+
+
+
+
+
 [网络通信面试]:http://www.cnblogs.com/wangwanchao/p/5268246.html
 [IP地址子网掩码]:http://blog.csdn.net/gatieme/article/details/50989257

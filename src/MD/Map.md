@@ -13,6 +13,23 @@ HashMap 的容量总是 2 的 n 次方，即底层数组的长度总是为` 2 �
 所以说，当数组长度为 2 的 n 次幂的时候，不同的 key 算得得 index 相同的几率较小，那么数据在数组上分布就比较均匀，
 也就是说碰撞的几率小，相对的，查询的时候就不用遍历某个位置上的链表，这样查询效率也就较高了。
 这里的`Hash算法`本质上就是三步：`取key的hashCode值`、`高位运算`、`取模运算`。
+
+#### put函数的实现
+put函数大致的思路为：
+- 对key的hashCode()做hash，然后再计算index;
+- 如果没碰撞直接放到bucket里；
+- 如果碰撞了，以链表的形式存在buckets后；
+- 如果碰撞导致链表过长(大于等于TREEIFY_THRESHOLD)，就把链表转换成红黑树；
+- 如果节点已经存在就替换old value(保证key的唯一性)
+- 如果bucket满了(超过load factor*current capacity)，就要resize。
+
+#### get函数的实现
+在理解了put之后，get就很简单了。大致思路如下：
+- bucket里的第一个节点，直接命中；
+- 如果有冲突，则通过key.equals(k)去查找对应的entry
+- 若为树，则在树中通过key.equals(k)查找，O(logn)；
+- 若为链表，则在链表中通过key.equals(k)查找，O(n)。
+
 #### 归纳
 简单地说，HashMap 在底层将 key-value 当成一个整体进行处理，这个整体就是一个 Entry 对象。HashMap 底层采用一个 Entry[] 数组来保存
 所有的 key-value 对，当需要存储一个 Entry 对象时，会根据 hash 算法来决定其在数组中的存储位置，在根据 equals 方法决定其在该数组位
@@ -241,7 +258,7 @@ LinkedList 和 ArrayList 一样，都实现了 List 接口，但其内部的数�
 （通过名字也能区分开来），所以它的插入和删除操作比 ArrayList 更加高效。但也是由于其为基于链表的，所以随机访问的效率要比 ArrayList 差。
 
 #### 数据结构
-LinkedList 是基于链表结构实现，所以在类中包含了 first 和 last 两个指针(Node)。Node 中包含了上一个节点和下一个节点的引用，这样就
+LinkedList 是基于链表结构实现，所以在类中包含了 `first 和 last `两个指针(Node)。Node 中包含了上一个节点和下一个节点的引用，这样就
 构成了双向的链表。每个 Node 只能知道自己的前一个节点和后一个节点，但对于链表来说，这已经足够了。
 
 
