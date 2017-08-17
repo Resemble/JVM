@@ -1,30 +1,4 @@
 # Java 相关琐碎知识
-### 排序
-#### 时间复杂度
-n^2表示n的平方,选择排序有时叫做直接选择排序或简单选择排序
-
-排序方法	            平均时间	    最好时间	    最坏时间
-桶排序(不稳定)	     O(n)	     O(n)	      O(n)
-基数排序(稳定)	     O(n)	     O(n)	      O(n)
-归并排序(稳定)	     O(nlogn)	 O(nlogn)	  O(nlogn)
-快速排序(不稳定)	     O(nlogn)	 O(nlogn)	  O(n^2)
-堆排序(不稳定)	     O(nlogn)	 O(nlogn)	  O(nlogn)
-希尔排序(不稳定)	     O(n^1.25)	  	 
-冒泡排序(稳定)	     O(n^2)	     O(n)	      O(n^2)
-选择排序(不稳定)	     O(n^2)	     O(n^2)	      O(n^2)
-直接插入排序(稳定)	 O(n^2)	     O(n)	      O(n^2)
-
-#### 空间复杂度
-冒泡排序,简单选择排序,堆排序,直接插入排序,希尔排序的空间复杂度为O(1),因为需要一个临时变量来交换元素位置,
-(另外遍历序列时自然少不了用一个变量来做索引)
-快速排序空间复杂度为logn(因为递归调用了) ,归并排序空间复杂是O(n),需要一个大小为n的临时数组.
-基数排序的空间复杂是O(n),桶排序的空间复杂度不确定
- 
-最快的排序算法是桶排序
-所有排序算法中最快的应该是桶排序(很多人误以为是快速排序,实际上不是.不过实际应用中快速排序用的多)但桶排序一般用的不多,因为有几个比较大的缺陷.
-1.待排序的元素不能是负数,小数.
-2.空间复杂度不确定,要看待排序元素中最大值是多少.
-所需要的辅助数组大小即为最大元素的值.
 
 ### Java IO库的两个设计模式
 装饰器模式：是在不必改变原类文件和使用继承的情况下，动态的扩展一个对象的功能
@@ -359,7 +333,7 @@ Servlet主要用于`控制逻辑。`在struts框架中,JSP位于MVC设计模式�
 这一点，是拦截器无法做到的。在Java Web中，你传入的request,response提前过滤掉一些信息，或者提前设置一些参数，然后再传入servlet或
 者struts的action进行业务逻辑，比如`过滤掉非法url`（不是login.do的地址请求，如果用户没有登陆都过滤掉）,或者在传入servlet或者struts
 的action前统一设置字符集，或者去除掉一些非法字符（聊天室经常用到的，一些骂人的话）。filter 流程是线性的，url传来之后，检查之后，
-可保持原来的流程继续向下执行，被下一个filter, servlet接收。
+可保持原来的流程继续向下执行，被下一个filter, servlet接收。项目中用了 OncePerRequestFilter 顾名思义，他能够确保在一次请求只通过一次filter，而不需要重复执行。
 2. 监听器（Listener）：Java的监听器，也是系统级别的监听。监听器随web应用的启动而启动。Java的监听器在c/s模式里面经常用到，它
 会对特定的事件产生产生一个处理。`监听在很多模式下用到，比如说观察者模式，就是一个使用监听器来实现的`，在比如`统计网站的在线人数`。
 又比如struts2可以用监听来启动。Servlet监听器用于监听一些重要事件的发生，监听器对象可以在事情发生前、发生后可以做一些必要的处理。
@@ -455,11 +429,16 @@ Map：可以把键(key)映射到值(value)的对象，键不能重复。
 - 加载
 根据查找路径找到相对应的 class 文件，然后导入
 “加载”(Loading)阶段是“类加载”(Class Loading)过程的第一个阶段，在此阶段，虚拟机需要完成以下三件事情：
-1、 通过一个类的`全限定名来获取定义此类的二进制字节流。`
+1、 通过一个类的`全限定名来获取定义此类的二进制字节流。`（可以是class文件，可以是jar包等等）
+我们先说第一步，通过一个类的全限定名来获取此类的二进制字节流。这个说法实际上是很大的一个操作的空间，这也是各种Java技术能够实现的基础。
+比如，我们可以通过zip包中获取，那么就有了后来的jar,war，我们还可以通过网络中获取这个类，这就是applet，甚至动态代理，
+运行时在生成特定的class二进制流，或者由其他文件生成，比如JSP，由JSP文件生成对应的Class文件。
  如Object类， 在源文件中的全限定名是java.lang.Object 。 而class文件中的全限定名是将点号替换成“/” 。 例如， Object类在class文件中的全限定名是 java/lang/Object 
 2、 将这个字节流所代表的`静态存储结构转化为方法区的运行时数据结构`。
 3、 在`Java堆中生成一个代表这个类的java.lang.Class对象`，作为方法区这些数据的访问入口。
 加载阶段即可以使用系统提供的类加载器在完成，也可以由用户自定义的类加载器来完成。加载阶段与连接阶段的部分内容(如一部分字节码文件格式验证动作)是交叉进行的，加载阶段尚未完成，连接阶段可能已经开始。
+加载阶段完成了之后，二进制字节流就按照虚拟机所需求的格式存储在方法区里面，然后初始化一个class实例，并且这个实例是放在方法区而不是java堆里面，然后这个实例是用来作为方法区里面数据的访问入口的。
+
 
 - 验证
 检查待加载的 class 文件的正确性
@@ -471,7 +450,8 @@ Java语言本身是相对安全的语言，使用Java编码是无法做到如访
 符号引用验证: 发生在虚拟机将符号引用转化为直接引用的时候，这个转化动作将在“解析阶段”中发生。验证符号引用中通过字符串描述的权限定名是否能找到对应的类；在指定类中是否存在符合方法字段的描述符及简单名称所描述的方法和字段；符号引用中的类、字段和方法的访问性(private、protected、public、default)是否可被当前类访问
 
 - 准备
-准备阶段是`为类的静态变量分配内存并将其初始化为默认值`，这些内存都将在方法区中进行分配。准备阶段不分配类中的实例变量的内存，实例变量将会在对象实例化时随着对象一起分配在Java堆中。
+准备阶段是`为类的静态变量分配内存并将其初始化为默认值`，这些内存都将在`方法区中进行分配。`准备阶段不分配类中的实例变量的内存，
+实例变量将会在对象实例化时随着对象一起分配在Java堆中。
  public static int value=123;//在准备阶段value初始值为0 。在初始化阶段才会变为123 
  
 -解析
@@ -482,6 +462,10 @@ Java语言本身是相对安全的语言，使用Java编码是无法做到如访
 - 初始化
 类初始化是类加载过程的最后一步，前面的类加载过程，除了在加载阶段用户应用程序可以通过自定义类加载器参与之外，其余动作完全由虚拟机主导和控制。到了初始化阶段，才真正开始执行类中定义的Java程序代码。
 收集类中的`所有类变量的赋值动作和静态语句块(static{}块)`中的语句合并产生的。
+初始化阶段是执行类构造器<clinit>（）方法的过程。类构造器<clinit>（）方法是由编译器自动收藏类中的所有类变量的赋值动作和静态语句块(static块)中的语句合并产生
+`当初始化一个类的时候，如果发现其父类还没有进行过初始化，则需要先触发其父类的初始化`
+`虚拟机会保证一个类的<clinit>（）方法在多线程环境中被正确加锁和同步`
+
 
 #### 3个类加载器
 - Bootstrap Loader 负责加载`系统类` 启动类加载器
@@ -576,47 +560,6 @@ ThreadLocal为变量在每个线程中都创建了一个`副本`，那么每个�
 
 
 
-### Java8 新增了非常多的特性，我们主要讨论以下几个：
-- Lambda 表达式 − Lambda允许把函数作为一个方法的参数（函数作为参数传递进方法中。->
-- 方法引用 − 方法引用提供了非常有用的语法，可以直接引用已有Java类或对象（实例）的方法或构造器。与lambda联合使用，方法引用可以使语言
-的构造更紧凑简洁，减少冗余代码。 `方法引用使用一对冒号(::)。`
-- 函数式接口 - 函数式接口可以被隐式转换为lambda表达式。函数式接口可以现有的函数友好地支持 lambda。
-- 默认方法 − 默认方法就是一个在`接口里面有了一个实现的方法。`
-- 新工具 − 新的编译工具，如：Nashorn引擎 jjs、 类依赖分析器jdeps。
-- Stream API −新添加的Stream API（java.util.stream） 把真正的`函数式编程风格引入到Java中。`
-List<Integer> transactionsIds = 
-widgets.stream()
-             .filter(b -> b.getColor() == RED)
-             .sorted((x,y) -> x.getWeight() - y.getWeight())
-             .mapToInt(Widget::getWeight)
-             .sum();
-             
-- Date Time API − `加强对日期与时间的处理。`
-// 获取当前的日期时间
-LocalDateTime currentTime = LocalDateTime.now();
-
-- Optional 类 − Optional 类已经成为 Java 8 类库的一部分，用来解决空指针异常。`允许为 null`
-- Nashorn, JavaScript 引擎 − Java 8提供了一个新的Nashorn javascript引擎，它允许我们在JVM上运行特定的javascript应用。
-- concurrent 包修改 ConcurrentHashMap 大数组、HashEntry 里面值超过8个自动转为红黑树,Java 8在链表长度超过一定`阈值（8）`时
-将链表（寻址时间复杂度为O(N)）转换为`红黑树`（寻址时间复杂度为O(log(N))）。
-
-- Base64 在Java 8中，Base64编码已经成为Java类库的标准。Java 8 内置了 Base64 编码的编码器和解码器。
- // 使用基本编码
-String base64encodedString = Base64.getEncoder().encodeToString("runoob?java8".getBytes("utf-8"));
-
-### Jdk9 
-jdk9将对Unsafe方法调整， sun.misc.Unsafe 将全部实现委托给 jdk.internal.misc.Unsafe
-Unsafe 利用反射
-- `对象的反序列化` 控制好字节，比如 int 4个字节
-- `线程安全的直接获取内存` Unsafe的另外一个用途是线程安全的获取非堆内存。ByteBuffer函数也能使你安全的获取非堆内存或是DirectMemory，
-但它不会提供任何线程安全的操作。你在进程间共享数据时使用Unsafe尤其有用。
-FileChannel fc = new RandomAccessFile(counters, "rw").getChannel()
-MappedByteBuffer mbb = fc.map(FileChannel.MapMode.READ_WRITE, 0, 1024);
-
-Field theUnsafe = Unsafe.class.getDeclaredField("theUnsafe");
-theUnsafe.setAccessible(true);
-long value = UNSAFE.`getLongVolatile`(null, address);
-UNSAFE.`compareAndSwapLong`(null, address, value, value + 1)
 
 ### Atomic
 Java.util.concurrent.atomic包中几乎大部分类都采用了CAS操作
@@ -655,11 +598,53 @@ volatile可以保证`线程可见性`且提供了一定的`有序性`，`但是�
 - 保证可见性、不保证原子性
 - 禁止指令重排序
 synchronized，只有在某些场合才能够使用volatile。使用它必须满足如下两个条件：
-- 对变量的写操作不依赖当前值；
-- 该变量没有包含在具有其他变量的不变式中。
+- `对变量的写操作不依赖当前值；`
+- `该变量没有包含在具有其他变量的不变式中。`
 volatile经常用于两个两个场景：`状态标记、double check`
+第一个条件的限制使volatile变量不能用作线程安全计数器。`虽然增量操作（x++）看上去类似一个单独操作，实际上它是一个由读取－修改－写入
+操作序列组成的组合操作，`必须以原子方式执行，而volatile不能提供必须的原子特性。实现正确的操作需要使x 的值在操作期间保持不变，而volatile
+变量无法实现这点。
+例如假如线程1，线程2 在进行read,load 操作中，发现主内存中count的值都是5，那么都会加载这个最新的值，
+在线程1堆count进行修改之后，会write到主内存中，主内存中的count变量就会变为6；线程2由于已经进行read,load操作，在进行运算之后，
+也会更新主内存count的变量值为6；导致两个线程及时用volatile关键字修改之后，还是会存在并发的情况。
+每一个线程运行时都有一个线程栈，线程栈保存了线程运行时候变量值信息。当线程访问某一个对象时候值的时候，首先通过对象的引用找到对应在
+堆内存的变量的值，然后把堆内存变量的具体值load到线程本地内存中，建立一个变量副本，之后线程就不再和对象在堆内存变量值有任何关系，
+而是直接修改副本变量的值，在修改完之后的某一个时刻（线程退出之前），自动把线程变量副本的值回写到对象在堆中变量。这样在堆中的对象的值
+就产生变化了。
 
 
+
+### 什么是泛型、为什么要使用以及泛型擦除   
+泛型，即“参数化类型”。 创建集合时就指定集合元素的类型，该集合只能保存其指定类型的元素，避免使用强制类型转换。 Java编译器生成的字节码
+是不包涵泛型信息的，泛型类型信息将在编译处理是被擦除，这个过程即类型擦除。泛型擦除可以简单的理解为将泛型java代码转换为普通java代码，
+只不过编译器更直接点，将泛型java代码直接转换成普通java字节码。 
+类型擦除的主要过程如下：
+ 1）.将所有的泛型参数用其最左边界（最顶级的父类型）类型替换。
+  2）.移除所有的类型参数。
+  
+
+#### Java中的集合类及关系图   
+- List和Set继承自Collection接口。 
+- Set无序不允许元素重复。HashSet和TreeSet是两个主要的实现类。 
+- List有序且允许元素重复。ArrayList、LinkedList和Vector是三个主要的实现类。 
+- Map也属于集合系统，但和Collection接口没关系。Map是key对value的映射集合，其中key列就是一个集合。key不能重复，
+但是value可以重复。HashMap、TreeMap和Hashtable是三个主要的实现类。 SortedSet和SortedMap接口对元素按指定规则排序，
+SortedMap是对key列进行排序。  
+  
+#### ArrayList和vector区别    
+ArrayList和Vector都实现了List接口，都是通过数组实现的。 
+Vector是线程安全的，而ArrayList是非线程安全的。 List第一次创建的时候，会有一个初始大小，随着不断向List中增加元素，
+当List 认为容量不够的时候就会进行扩容。`Vector缺省情况下自动增长原来一倍的数组长度，ArrayList增长原来的50%。  `
+  
+#### Collection和Collections的区别    
+java.util.`Collection 是一个集合接口`。它提供了对集合对象进行基本操作的通用接口方法。
+Collection接口在Java 类库中有很多具体的实现。Collection接口的意义是为各种具体的集合提供了最大化的统一操作方式。 
+java.util.`Collections 是一个包装类`。它包含有各种有关集合操作的静态多态方法。此类不能实例化，就像一个工具类，服务于Java的Collection框架。  
+Collections.sort()  
+  
+  
+  
+  
 ### 32的jvm可以跑多大的程序？ 
 `所谓32位处理器就是一次只能处理32位，也就是4个字节的数据，而64位处理器一次就能处理64位，即8个字节的数据。`
 理论上来说32位的JVM有4G的堆大小限制。但是因为各种条件限制比如交换区，内核地址空间使用，内存碎片，虚拟管理机的管理开销，实际上可用的
@@ -671,6 +656,126 @@ volatile经常用于两个两个场景：`状态标记、double check`
 
 ### 维持一个固定大小的最大最小堆就是维持一个固定大小的 Array
 
+
+### string 类能不能被继承
+答案： 不可以，因为String类有final修饰符，而final修饰的类是不能被继承的，实现细节不允许改变。
+public final class String implements java.io.Serializable, Comparable<String>, CharSequence 
+### final
+根据程序上下文环境，Java关键字final有“这是无法改变的”或者“终态的”含义，它可以修饰非抽象类、非抽象类成员方法和变量。你可能出于两种理解而需要阻止改变：设计或效率。 
+　　final类不能被继承，没有子类，final类中的方法默认是final的。 
+　　final方法不能被子类的方法覆盖，但可以被继承。 
+　　final成员变量表示常量，只能被赋值一次，赋值后值不再改变。 
+　　final不能用于修饰构造方法。 
+　　注意：父类的private成员方法是不能被子类方法覆盖的，因此private类型的方法默认是final类型的。
+
+如果一个类不允许其子类覆盖某个方法，则可以把这个方法声明为final方法。 
+　　使用final方法的原因有二： 
+　　第一、把方法锁定，防止任何继承类修改它的意义和实现。 
+　　第二、高效。编译器在遇到调用final方法时候会转入内嵌机制，大大提高执行效率。
+### 还有什么不可以继承
+public final class Byte 
+public final class Character 
+public static final class Character.UnicodeBlock 
+public final class Class<T> 
+public final class Compile 
+public final class Double 
+public final class Float 
+public final class Integer 
+public final class Long 
+public final class Math 
+public final class ProcessBuilder 
+public final class RuntimePermission 
+public final class Short 
+public final class StackTraceElement 
+public final class StrictMath 
+public final class String 
+public final class StringBuffer 
+public final class StringBuilder 
+public final class System 
+public final class Void
+
+### 关于String类，要了解常量池的概念
+String s = new String(“xyz”);  //创建了几个对象
+答案： 1个或2个， 如果”xyz”已经存在于常量池中，则只在堆中创建”xyz”对象的一个拷贝，否则还要在常量池中在创建一份
+String s = "a"+"b"+"c"+"d"; //创建了几个对象
+答案： 这个和JVM实现有关， 如果常量池为空，可能是1个也可能是7个等
+### 相关类： StringBuffer, StringBuilder
+从源代码的角度聊聊java中StringBuffer、StringBuilder、String中的字符串拼接
+String为immutable, 不可更改的，每次String对象做累加时都会创建StringBuilder对象， 效率低下。
+// 程序编译期即加载完成对象s1为"ab"，JVM自有优化， 效率并不差
+String s1 = "a" + "b";  
+// 这种方式，JVM会先创建一个StringBuilder，然后通过其append方法完成累加操作，比较耗资源
+// 所以在循环中做字符串累加赋值时应当使用StringBuilder或StringBuffer类
+String s1 = "a";
+String s2 = "b"; 
+String s3 = s1 + s2; // 等效于 String s3 = (new StringBuilder(s1)).append(s2).toString();
+StringBuffer是线程安全的 
+
+### JAVA死锁和避免死锁
+  概念：两个或多个线程一直在相互等待其他线程完成而使得所有线程都始终处在阻塞的状态
+死锁产生的四个必要条件。
+1>资源`互斥`使用性，即当资源被一个线程使用(占有)时，别的线程不能使用
+2>资源的`不可抢占`，资源请求者不能强制从资源占有者手中夺取资源，资源只能由资源占有者主动释放。
+3>执行者`请求和保持`，即当资源请求者在请求其他的资源的同时保持对原有资源的占用。
+4>执行者`循环等待`，即存在一个等待队列：P1占有P2的资源，P2占有P3的资源，P3占有P1的资源。这样就形成了一个等待环路。
+查看死锁：
+1>使用JDK给我们的的工具JConsole，可以通过打开cmd然后输入`jconsole`打开。 JConsole 里面有检查死锁这个按钮
+2>直接使用JVM自带的命令
+1）首先通过 `jps `命令查看需要查看的Java进程的vmid
+2）然后利用 jstack 查看该进程中的堆栈情况，在cmd中输入 `jstack -l 7412。`
+ 
+### 虚拟机性能监控与故障处理工具
+- JConsole Java 监视与管理控制台
+- jps 虚拟机进程状态工具
+- jstack Java 堆栈跟踪工具 
+jstack（Stack Trace for Java）命令用于生成虚拟机当前时刻的线程快照。线程快照就是当前虚拟机内每一条线程正在执行的方法堆栈的集合，
+生成线程快照的目的主要是定位线程长时间出现停顿的原因，如`线程间死锁、死循环、请求外部资源导致的长时间等待等都是导致线程长时间停顿的原因。`
+线程出现停顿的时候通过jstack来查看各个线程的调用堆栈，就可以知道没有响应的线程到底在后台做些什么事情，或者在等待些什么资源。
+- jstat：（JVM Statistics Monitoring Tool）虚拟机统计信息监控工具
+jstat使用于监视虚拟机各种运行状态信息的命令行工具。它可以显示本地或者远程（需要远程主机提供RMI支持）虚拟机进程中的类信息、内存、
+垃圾收集、JIT编译等运行数据，在没有GUI，只提供了纯文本控制台环境的服务器上，它将是运行期间定位虚拟机性能问题的首选工具。
+jstat -gc 2764 250 20  监视Java堆状况，包括Eden区、两个Survivor区、、老年代、永久带等的容量、已用空间、GC时间合计等信息
+- jinfo：Java配置信息工具
+jinfo（Configuration Info for Java）的作用是实时地查看和调整虚拟机各项参数。使用jps命令的-v可以查看虚拟机启动时显式指定的参数列表，但如果想知道未被显式指定的参数的系统默认值，可以使用jinfo的-flag选项进行查询，jinfo还可以使用-sysprops选项把虚拟机进程的System.getProperties()的内容打印出来。
+- jmap：Java内存映像工具
+jmap（Memory Map for Java）命令用于生成堆转储快照。如果不使用jmap命令，要想获取Java堆转储，可以使用“-XX:+HeapDumpOnOutOfMemoryError”参数，可以让虚拟机在OOM异常出现之后自动生成dump文件，Linux命令下可以通过kill -3发送进程退出信号也能拿到dump文件。
+jmap的作用并不仅仅是为了获取dump文件，它还可以查询finalize执行队列、Java堆和永久代的详细信息，如空间使用率、当前使用的是哪种收集器等。和jinfo一样，jmap有不少功能在Windows平台下也是受限制的，除了生成dump文件的-dump选项和用于查看每个类的实例、空间占用统计的-histo选项在所有操作系统都提供之外，其余选项都只能在Linux和Solaris系统下使用。
+- Visual VM
+这个是到目前为止随JDK发布的功能最为强大的运行监视和故障处理工具，除了最基本的运行监视、 故障处理外，还有性能分析的功能，且十分强大。Visual VM还有一个很大的优点，它对应用程序的实际性能影响很小，使得它可以直接应用在生产环境中。
+
+
+
+### Java中equals和==的区别
+java中的数据类型，可分为两类： 
+1.`基本数据类型`，也称原始数据类型。byte,short,char,int,long,float,double,boolean 
+他们之间的比较，应用双等号`（==）,比较的是他们的值`。 
+2.复合数据类型(类) 
+`当他们用（==）进行比较的时候，比较的是他们在内存中的存放地址`，所以，除非是同一个new出来的对象，他们的比较后的结果为true，否则
+比较后结果为false。 JAVA当中所有的类都是继承于Object这个基类的，在Object中的基类中定义了`一个equals的方法，这个方法的初始行为是
+比较对象的内存地 址，`但在一些类库当中这个方法`被覆盖掉`了，如`String,Integer,Date`在这些类当中equals有其自身的实现，而不再是比较类
+在堆内存中的存放地址了。
+对于复合数据类型之间进行equals比较，在没有覆写equals方法的情况下，他们之间的比较还是基于他们在内存中的存放位置的地址值的，因为
+Object的equals方法也是用双等号（==）进行比较的，所以比较后的结果跟双等号（==）的结果相同。
+ 
+### JAVA中重写equals()方法为什么要重写hashcode()方法?
+注意：当此方法被重写时，通常有必要重写 hashCode 方法，以维护 hashCode 方法的常规协定，`该协定声明相等对象必须具有相等的哈希码`。
+如果不重写equals，那么比较的将是对象的引用是否指向同一块内存地址，重写之后目的是为了比较两个对象的value值是否相等。特别指出利用equals比较八大包装对象
+（如int，float等）和String类（因为该类已重写了equals和hashcode方法）对象时，默认比较的是值，在比较其它自定义对象时都是比较的引用地址
+`hashcode是用于散列数据的快速存取，如利用HashSet/HashMap/Hashtable类来存储数据时，都是根据存储对象的hashcode值来进行判断是否相同的。`
+这样如果我们对一个对象重写了euqals，意思是只要对象的成员变量值都相等那么euqals就等于true，但不重写hashcode，那么我们再new一个新的对象，
+当原对象.equals（新对象）等于true时，两者的hashcode却是不一样的，由此将产生了理解的不一致，`如在存储散列集合时（如Set类），
+将会存储了两个值一样的对象，导致混淆，因此，就也需要重写hashcode()`
+
+
+### 自动装箱与拆箱    
+装箱：`将基本类型用它们对应的引用类型包装起来`；  Integer i = 100;  系统为我们执行了：Integer i = Integer.valueOf(100);
+拆箱：`将包装类型转换为基本数据类型`；  Integer -> int
+Java使用自动装箱和拆箱机制，节省了常用数值的内存开销和创建对象的开销，提高了效率，`由编译器来完成，编译器会在编译期根据语法决定是否进行装箱和拆箱动作`。
+ 
+### 内存溢出和内存泄漏的区别
+内存溢出是指程序在申请内存时，没有足够的内存空间供其使用，出现out of
+memory。
+内存泄漏是指分配出去的内存不再使用，但是无法回收。 
  
 #### 正则表达式
 \       将下一字符标记为特殊字符、文本、反向引用或八进制转义符。例如，"n"匹配字符"n"。"\n"匹配换行符。序列"\\"匹配"\"，"\("匹配"("。

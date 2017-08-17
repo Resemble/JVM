@@ -131,7 +131,16 @@ public class Main{
 ### 面向对象思想
 简单来说就是把复杂系统分解成相互合作的对象，这些对象类通过封装以后，内部实现对外部是透明的，从而降低了解决问题的复杂度，而且可以灵活地被重用和扩展。
 
-
+### springMVC的工作原理图：
+1、客户端发出一个http请求给web服务器，web服务器对http请求进行解析，如果匹配DispatcherServlet的请求映射路径（在web.xml中指定），
+web容器将请求转交给`DispatcherServlet.`
+2、DipatcherServlet接收到这个请求之后将根据请求的信息（包括URL、Http方法、请求报文头和请求参数Cookie等）以及HandlerMapping的配置
+找到处理请求的处理器（`Handler`）。
+3-4、DispatcherServlet根据HandlerMapping找到对应的Handler,将处理权交给Handler（Handler将具体的处理进行封装），再由具体的
+HandlerAdapter对Handler进行具体的调用。
+5、Handler对数据处理完成以后将返回一个`ModelAndView()`对象给DispatcherServlet。
+6、Handler返回的ModelAndView()只是一个逻辑视图并不是一个正式的视图，DispatcherSevlet通过`ViewResolver将逻辑视图转化为真正的视图View`。
+7、Dispatcher通过model解析出ModelAndView()中的参数进行解析最终展现出完整的view并返回给客户端。
 
 
 ### Hibernate是如何延迟加载？
