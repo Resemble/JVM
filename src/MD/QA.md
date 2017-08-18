@@ -48,6 +48,24 @@ static是静态变量,就是变量值不随函数执行结束而消失，下次�
 switch（expr1）中，expr1是一个整数表达式。因此传递给 switch 和 case 语句的参数应该是 int、 short、 char 或者 byte。
 long,string 都不能作用于swtich。
 
+#### short s1 = 1; s1 = s1 + 1;有什么错? short s1 = 1; s1 +=1;有什么错?
+答：对于short s1=1;s1=s1+1来说，在s1+1运算时会自动提升表达式的类型为int，那么将int赋予给short类型的变量s1会出现类型转换错误。对于short s1=1;s1+=1来说，+=是java语言规定的运算符，Java编译器会对它进行特殊处理，因此可以正确编译。
+char类型变量能不能储存一个中文的汉子，为什么？
+答：char类型变量是用来储存Unicode编码的字符的，unicode字符集包含了汉字，所以char类型当然可以存储汉字的，还有一种特殊情况就是某个生僻字没有包含在unicode编码字符集中，那么就char类型就不能存储该生僻字。补充说明，Unicode编码占用两个字节，所以，char类型的变量也是占用两个字节。
+#### Integer和int的区别
+int是java的8种内置的原始数据类型。Java为每个原始类型都提供了一个封装类，Integer就是int的封装类。int变量的默认值为0，Integer变量的默认值为null，这一点说明Integer可以区分出未赋值和值为0的区别，比如说一名学生没来参加考试，另一名学生参加考试全答错了，那么第一名考生的成绩应该是null，第二名考生的成绩应该是0分。关于这一点Integer应用很大的。Integer类内提供了一些关于整数操作的一些方法，例如上文用到的表示整数的最大值和最小值。
+#### switch语句能否作用在byte上，能否作用在long上，能否作用在string上？
+答：byte的存储范围小于int，可以向int类型进行隐式转换，所以switch可以作用在byte上。long的存储范围大于int，不能向int进行隐式转换，只能强制转换，所以switch不可以作用在long上。string在1.7版本之前不可以，1.7版本之后switch就可以作用在string上了。
+#### Math.round(11.5)等于多少？Math.round(-11.5)等于多少？
+答：Math类中提供了三个与取整有关的方法：ceil、floor、round，这些方法的作用与它们的英文名称的含义相对应。例如，ceil的英文意义是天花板，该方法就表示向上取整，Math.ceil(11.3)的结果为12,Math.ceil(-11.3)的结果是-11；floor的英文意义是地板，该方法就表示向下取整，Math.ceil(11.6)的结果为11,Math.ceil(-11.6)的结果是-12；最难掌握的是round方法，它表示“四舍五入”，算法为Math.floor(x+0.5)，即将原来的数字加上0.5后再向下取整，所以，Math.round(11.5)的结果为12，Math.round(-11.5)的结果为-11。
+
+
+#### Throwable、Error、Exception、RuntimeException 区别 联系
+1.Throwable 类是 Java 语言中所有错误或异常的超类。它的两个子类是Error和Exception；
+2.Error 是 Throwable 的子类，用于指示合理的应用程序不应该试图捕获的严重问题。大多数这样的错误都是异常条件。虽然 ThreadDeath 错误是一个“正规”的条件，但它也是 Error 的子类，因为大多数应用程序都不应该试图捕获它。在执行该方法期间，无需在其 throws 子句中声明可能抛出但是未能捕获的 Error 的任何子类，因为这些错误可能是再也不会发生的异常条件。
+3.Exception 类及其子类是` Throwable 的一种形式，它指出了合理的应用程序想要捕获的条件。`
+4.RuntimeException 是那些可能在` Java 虚拟机正常运行期间抛出的异常的超类`。可能在执行方法期间抛出但未被捕获的RuntimeException 的任何子类都无需在 throws 子句中进行声明。它是Exception的子类。
+
 
 #### Linux笔试题10．什么是符号链接(软连接)，什么是硬链接？符号链接与硬链接的区别是什么？
 参考答案：
@@ -69,11 +87,6 @@ long,string 都不能作用于swtich。
 适用网络状况的变化`，当网络状况变化后必须由网络管理员修改路由表。
 动态路由是由`路由选择协议而动态构建的`，路由协议之间通过交换各自所拥有的路由信息`实时更新路由表的内容`。动态路由可以自动学习网络的拓朴
 结构，并更新路由表。其缺点是`路由广播更新信息将占据大量的网络带宽`。
-
-#### Linux笔试题12．简述网络文件系统NFS，并说明其作用。
-参考答案：
-网络文件系统是应用层的一种应用服务，它主要应用于`Linux`和Linux系统、Linux和`Unix`系统之间的`文件或目录的共享`。对于用户而言可以通过
-NFS方便的访问远地的文件系统，使之成为本地文件系统的一部分。采用NFS之后`省去了登录的过程，方便了用户访问系统资源`。
 
 
 ####  String类型传递是值传递，char[]类型传递是引用传递
@@ -101,5 +114,22 @@ sql_mode 为系统变量，既是全局系统变量，又是会话系统变量�
 
 磁盘阵列的配置文件为/etc/raidtab 逻辑设备为 /dev/md0磁盘阵列
 
+### Java中的Object类是所有类的父类，它提供了以下11个方法：
+
+public final native Class<?> getClass()
+public native int hashCode()
+public boolean equals(Object obj)
+protected native Object clone() throws CloneNotSupportedException
+public String toString()
+public final native void notify()
+public final native void notifyAll()
+public final native void wait(long timeout) throws InterruptedException
+public final void wait(long timeout, int nanos) throws InterruptedException
+public final void wait() throws InterruptedException
+protected void finalize() throws Throwable { }
 
 
+### 为什么用lucene 而不是直接数据库查询
+### 知道lucene的中文分词器吗 为什么用中文分词器
+### Lucene全文搜索的原理
+### solr
