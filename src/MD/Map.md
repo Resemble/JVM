@@ -124,7 +124,11 @@ public class HahsMapTest {
 #### 4、再散列（双重散列，多重散列）
 当发生冲突时，使用第二个、第三个、哈希函数计算地址，直到无冲突时。缺点：计算时间增加。
 
-
+####  建立一个公共溢出区
+设哈希函数产生的哈希地址集为[0，m-1]，则分配两个表：
+一个基本表ElemType base_tbl[m]；每个单元只能存放一个元素；
+一个溢出表ElemType over_tbl[k]；只要关键码对应的哈希地址在基本表上产生冲突，则所有这样的元素一律存入该表中。查找时，对给定值kx 
+通过哈希函数计算出哈希地址i，先与基本表的base_tbl[i]单元比较，若相等，查找成功；否则，再到溢出表中进行查找。
 
 ### ConcurrentHashMap 的实现原理
 ### jdk7
@@ -182,7 +186,7 @@ CAS作为知名无锁算法，那ConcurrentHashMap就没用锁了么？当然不
 
 
 ### LinkedHashMap 的实现原理
-LinkedHashMap 可以选择按照访问顺序进行排序。
+`LinkedHashMap 可以选择按照访问顺序进行排序。`
 LinkedHashMap 实现与 HashMap 的不同之处在于，LinkedHashMap 维护着一个运行于所有条目的`双重链接列表`。此链接列表定义了迭代顺序，
 该`迭代顺序可以是插入顺序或者是访问顺序`。
 注意，此实现不是同步的。如果多个线程同时访问链接的哈希映射，而其中至少一个线程从结构上修改了该映射，则它必须保持外部同步。
@@ -266,7 +270,7 @@ LinkedList 是基于链表结构实现，所以在类中包含了 `first 和 las
 ### Fail-Fast 机制
 ArrayList HashMap ...
 #### 原理
-一种错误检测机制 多线程 源代码中通过 modCount 来实现，修改次数哈哈
+一种错误检测机制 多线程 源代码中通过 modCount 来实现，修改次数
 
 （1）单线程环境
 集合被创建后，在遍历它的过程中修改了结构。  比如在 iterator 中遍历时 put 进去
@@ -274,11 +278,30 @@ ArrayList HashMap ...
 （2）多线程环境
 当一个线程在遍历这个集合，而另一个线程对这个集合的结构进行了修改。
 
+```java
+public class test {
+    public static void main(String[] args){
+      Iterator<String> iter = list.iterator();
+      int j=0;
+      while(iter.hasNext())
+      {
+          System.out.println(iter.next());
+          if(j==3)
+          {
+               list.remove(0);  // 出现 ConcurrentModificationException。
+               iter.remove();   // （单线程下）不会引发ConcurrentModificationException。但迭代器也只有这个修改相关的操作。
+          }
+          j++;
+      }
+    }
+}
+```
+
 我们知道 java.util.HashMap 不是线程安全的，因此如果在使用迭代器的过程中有其他线程修改了 map，那么将抛出 
 ConcurrentModificationException，这就是所谓 fail-fast 策略。
 fail-fast 机制是 java 集合(Collection)中的一种错误机制。 当`多个线程对同一个集合的内容进行操作`时，就可能会产生 fail-fast 事件。
-例如：当某一个线程 A 通过 iterator去遍历某集合的过程中，若该集合的内容被其他线程所改变了；那么线程 A 访问集合时，就会抛出
- ConcurrentModificationException 异常，产生 fail-fast 事件。
+例如：`当某一个线程 A 通过 iterator去遍历某集合的过程中，若该集合的内容被其他线程所改变了；那么线程 A 访问集合时，就会抛出
+ ConcurrentModificationException 异常，产生 fail-fast 事件。`
 这一策略在源码中的实现是通过 modCount 域，`modCount 顾名思义就是修改次数`，对 HashMap 内容（当然不仅仅是 HashMap 才会有，其他例如
  ArrayList 也会）的修改都将增加这个值（大家可以再回头看一下其源码，在很多操作中都有 modCount++ 这句），那么在迭代器初始化过程中会
  将这个值赋给迭代器的 expectedModCount。
@@ -297,7 +320,7 @@ fail-fast 机制是 java 集合(Collection)中的一种错误机制。 当`多�
  LinkedList
  Vector 虽然 Vector 是线程安全的
 使用 Collections.synchronizedXXX() 创建的线程安全的集合也是 Fail-fast
-
+###### java.util包下面的所有的集合类都是快速失败的，而java.util.concurrent包下面的所有的类都是安全失败的。
 ### fail-safe机制
 fail-safe任何对集合结构的修改都会在一个`复制的集合上`进行修改，因此不会抛出ConcurrentModificationException
 fail-safe机制有两个问题
