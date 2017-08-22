@@ -952,3 +952,8 @@ InputStreamReader isr = newInputStreamReader(fis, "UTF8");
 字符是字节通过不同的编码的包装
 字符向字节转换时，要注意编码的问题
 
+#### Math.
+ceil()：将小数部分一律向整数部分进位。
+floor()：一律舍去，仅保留整数。
+round()：进行`四舍五入`
+
