@@ -1,5 +1,49 @@
 ## 项目经历
 
+#### 项目需要改进的地方
+- 爬虫，更新的时候更新10条，如果可以做的话可以改成爬一条，进行数据库匹配然后再爬
+- 邮件服务，多个ip发送邮件
+- 爬虫批量插入，我用的是拼成一条sql查完，可以改成500条一批插入
+
+
+
+#### 优化地方有
+- 邮件服务，多线程，异步，多个账户，原生java(验证 session transport)
+- 可乐后端报表服务，数据库连接池，加入请求超时(占用资源) 从jmeter测试500个请求tomcat宕机到1000个请求没有任何问题
+- 我们的 api-gate 网关api还没有完全实现
+- 使用docker 部署 centOs7(200m) 易维护，不干扰主机
+- redis是作为一个模块放入，可以改成一个cache-api微服务
+
+
+### 设计模式
+模板方法，定义了一个baseReport抽象类，然后延迟到子类实现具体获取
+单例模式，创建一个redis实例时用了单例模式，只要一个循环使用节约cpu资源
+
+#### 抽象类和普通类的继承
+`抽象类更像是提供一种模板`。。
+抽象方法必须被子类实现,没有方法体。
+抽象类的作用是普通类无法替代的，抽象类的作用主要是提供一种模版
+
+抽象方法：在类中没有方法体的方法，就是抽象方法。
+抽象类：含有抽象方法的类就叫抽象类。
+抽象类中的抽象方法必须被实现！
+如果一个子类没有实现父类中的抽象方法，则子类也成为了一个抽象类！
+抽象类中的普通方法，可以不必实现。
+
+```java
+// 抽象类
+abstract class Person {
+public abstract void f();
+}
+// 普通类
+class Person {
+public void f() {
+System.out.println("父类");
+}
+}
+```
+
+
 我专门来到牛客看了看大神在面试的时候怎么你回答的，自己是怎么回答的。结果就发现了问题。大神们的回答，不论是项目还是问题，都回答的很
 有条理，`而且分析到问题的里，里面了`，而我只是 把概念说了一下，根本没有说到问题的实质，直到这个时候我才了解到为什么搜狗的面试官对我的
 评价时呢样的。
@@ -307,12 +351,36 @@ console.log('hello'.repeatify(3));
 ### 使用bcrypt加密
 
 
+### 热部署
+热部署的目的很简单，就是为了节省应用开发和发布的时间。比如，我们在使用Tomcat或者Jboss等应用服务器开发应用时，我们经常会开启热部署
+功能。热部署，简单点来说，`就是我们将打包好的应用直接替换掉原有的应用，不用关闭或者重启服务器`，一切就是这么简单。
 
 
+### ehcache 热部署造成内存泄漏
+每隔一天，服务器就会报出内存溢出
+部署的时候有 this is very likely to create a memory leak，显示具体那个线程
+使用 jconsole 连接发现每次删除 war 包会多一个线程
+spring中的提供了一个名为org.springframework.web.util.IntrospectorCleanupListener的监听器。它主要负责  
+处理由　JavaBeans  Introspector的使用而引起的缓冲泄露。spring中对它的描述如下：  
+它是一个在web应用关闭的时候,清除JavaBeans Introspector的监听器.在web.xml中注册这个listener.  
+可以保证在web 应用关闭的时候释放与掉这个web 应用相关的class loader 和由它管理的类  
+如果你使用了JavaBeans Introspector来分析应用中的类，Introspector 缓冲中会保留这些类的引用.  
+结果在你的应用关闭的时候,这些类以及web 应用相关的class loader没有被垃圾回收.  
+解决办法，就是在web.xml中加入: 
+```xml
+<listener> 
+<listener-class>org.springframework.web.util.IntrospectorCleanupListener</listener-class> 
+</listener>
+```
 
-
-
-
+### maven命令
+mvn -v # 查看maven版本
+mvn compile # 编译
+mvn test # 测试
+mvn package # 打包
+mvn clean # 删除 target
+mvn install # 安装jar包到本地仓库中
+mvn archetype:generate -DgroupId=co.hoteam -DartifactId=Zigbee -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false # 创建一个新工程
 
 
 
