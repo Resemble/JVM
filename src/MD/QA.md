@@ -129,7 +129,40 @@ public final void wait() throws InterruptedException
 protected void finalize() throws Throwable { }
 
 
-### 为什么用lucene 而不是直接数据库查询
-### 知道lucene的中文分词器吗 为什么用中文分词器
-### Lucene全文搜索的原理
-### solr
+### @Autowired和@Resource的区别是什么？
+1、@Autowired与@Resource都可以用来装配bean. 都可以写在字段上,或写在setter方法上。
+2、@Autowired默认`按类型装配（这个注解是属业spring的）`，默认情况下必须要求依赖对象必须存在，如果要允许null值，可以设置它的required属性为false，如：
+@Autowired(required=false) 
+3、@Resource 是`JDK1.6支持的注解`，默认`按照名称进行装配`，名称可以通过name属性进行指定，如果没有指定name属性，当注解写在字段上时，
+默认取字段名，按照名称查找，如果注解写在setter方法上默认取属性名进行装配。
+
+
+
+### 静态方法可以被重写，没有意义的重写。静态方法不会被初始化
+JAVA静态方法形式上可以重写，但从本质上来说不是JAVA的重写。因为静态方法只与类相关，不与具体实现相关，声明的是什么类，则引用相应类的静态方法(本来静态无需声明，可以直接引用)，看下例子：
+Java代码  
+```java
+class Base{  
+        static void a( ){System.out.println("A");  }  
+                 void b( ){System.out.println("B"); }  
+}  
+public class  Inherit extends Base{  
+          static void a( ){System.out.println("C");  }  
+                  void b( ){System.out.println("D"); }  
+           public static void main(String args[]){  
+                    Base b=new Base();  
+                    Base  c=new Inherit();  
+                    b.a();  
+                    b.b();  
+                    c.a();  
+                    c.b();  
+         }  
+}  
+```
+ 
+以上输出的结果是：A
+                                 B
+                                 A
+                                 D
+非静态方法 按重写规则调用相应的类实现方法，而静态方法只与类相关。
+`所谓静态，就是在运行时，虚拟机已经认定此方法属于哪个类。`
