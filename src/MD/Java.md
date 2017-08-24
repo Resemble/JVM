@@ -306,10 +306,10 @@ class MyCallable implements Callable<Object> {
 Servlet主要用于`控制逻辑。`在struts框架中,JSP位于MVC设计模式的`视图层`,而Servlet位于`控制层`.
 
 ### cookie和session的作用、区别、应用范围，session的工作原理？？？
-- Cookie:主要用在保存`客户端`，其值在客户端与服务端之间传送，不安全，存储的数据量有限。
-- Session:保存在`服务端`，每一个session在服务端有一个sessionID作一个标识。存储的数据量大，安全性高。占用服务端的内存资源。
+- Cookie:主要用在保存`客户端`，其值在客户端与服务端之间传送，`不安全，存储的数据量有限。`
+- Session:保存在`服务端`，每一个session在服务端有一个sessionID作一个标识。`存储的数据量大，安全性高`。`占用服务端的内存资源。`
 服务器使用session把用户的信息临时保存在了服务器上，用户离开网站后session会被销毁。这种用户信息存储方式相对cookie来说更安全，
-可是session有一个缺陷：`如果web服务器做了负载均衡，那么下一个操作请求到了另一台服务器的时候session会丢失`。
+可是session有一个缺陷：`如果web服务器做了负载均衡，那么下一个操作请求到了另一台服务器的时候session会丢失`。`session不能跨服务器`
 
 - Session只提供一种简单的认证，即有此 `SID`，即认为有此 User的全部权利。是需要严格保密的，这个数据应该只保存在站方，不应该共享给其它网站或者第三方App。 所以简单来说，如果你的用户数据可能需要和第三方共享，或者允许第三方调用 API 接口，用 Token 。如果永远只是自己的网站，自己的 App，用什么就无所谓了。
 - token就是令牌，比如你`授权（登录）一个程序`时，他就是个依据，判断你是否已经授权该软件；cookie就是写在客户端的一个txt文件，
@@ -317,7 +317,49 @@ Servlet主要用于`控制逻辑。`在struts框架中,JSP位于MVC设计模式�
 服务器端的文件，也需要在客户端写入cookie文件，但是文件里是你的浏览器编号.Session的状态是存储在服务器端，客户端只有session id；
 而Token的状态是存储在客户端。
 
-
+```java
+public class test {
+    
+    public void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+    
+        response.setContentType("text/html;charset=utf-8");
+        PrintWriter out = response.getWriter();
+        //访问session[当发现没有session的时候，就会自动创建一个session]
+        HttpSession session = request.getSession();
+        // 给该session放入属性
+        session.setAttribute("name", "小明");
+        session.setAttribute("age", "18");
+        //session的生命周期默认是30min，但是你也可以修改
+        //session.setMaxInactiveInterval(interval);
+        out.println("创建了session，并放入了两个属性，name和age");        
+    }
+    
+    public class CookieTest1 extends HttpServlet{  
+        //处理get请求  
+        public void doGet(HttpServletRequest req,HttpServletResponse res){  
+            try {  
+                res.setContentType("text/html;charset=gbk");  
+                PrintWriter pw=res.getWriter();  
+                //当用户访问该servlet时， 就将信息创建到该用户的cookie中  
+                //1. 现在服务器端创建一个cookie  
+                Cookie myCookie=new Cookie("color1","red");  
+                //2. 该cookie存在的时间 以秒为单位  
+                myCookie.setMaxAge(30000);  
+                //如果你不设置存在时间,那么该cookie将不会保存  
+                //3. 将该cookie写回到客户端  
+                res.addCookie(myCookie);  
+                pw.println("已经创建了cookie"); 
+                // ps 将该cookie删除  
+                 temp.setMaxAge(0);  
+            }  
+            catch (Exception ex) {  
+                ex.printStackTrace();  
+            }                 
+        }  
+    }  
+}
+```
 
 
 
@@ -958,6 +1000,72 @@ floor()：一律舍去，仅保留整数。
 round()：进行`四舍五入`
 
 
-### java内存泄漏
 
-### jvm调优
+### Enum
+枚举的实质是将枚举元素导出为public final class。无法继承。
+枚举的好处：可以将常量组织起来，统一进行管理。
+枚举的典型应用场景：错误码、状态机等。
+enum 可以像一般类一样实现接口。
+enum 不可以继承另外一个类，当然，也不能继承另一个 enum 。
+java 单继承，enum 本身已经继承了
+`public abstract class Enum<E extends Enum<E>>
+        implements Comparable<E>, Serializable `
+```java
+public interface INumberEnum {
+    int getCode();
+    String getDescription();
+}
+
+public enum ErrorCodeEn2 implements INumberEnum {
+    OK(0, "成功"),
+    ERROR_A(100, "错误A"),
+    ERROR_B(200, "错误B");
+
+    ErrorCodeEn2(int number, String description) {
+        this.code = number;
+        this.description = description;
+    }
+
+    private int code;
+    private String description;
+
+    @Override
+    public int getCode() {
+        return code;
+    }
+
+    @Override
+    public String getDescription() {
+        return description;
+    }
+}
+```
+
+#### 什么是servlet？
+客户端 -> web服务器 -> servlet -> web服务器 -> 客户端
+servlet可以被认为是服务器端的applet。servlet被Web服务器加载和执行，就如同applet被浏览器加载和执行一样。servlet从客户端
+(通过Web服务器)接收请求，执行某种作业，然后返回结果。
+使用servlet的基本流程如下：
+- 客户端(很可能是Web浏览器)通过HTTP提出请求。
+- Web服务器接收该请求并将其发给servlet。如果这个servlet尚未被加载，Web服务器将把它加载到Java虚拟机并且执行它。
+- servlet将接收该HTTP请求并执行某种处理。
+- servlet将向Web服务器返回应答。
+- Web服务器将从servlet收到的应答发送给客户端。
+
+#### 为什么要使用servlet？
+servlet可以很好地替代公共网关接口(Common
+Gateway Interface，CGI)脚本。通常CGI脚本是用Perl或者C语言编写的，它们总是和特定的服务器平台紧密相关。而servlet是用Java编写的，
+所以它们一开始就是平台无关的。这样，Java编写一次就可以在任何平台运行(write once,run anywhere)的承诺就同样可以在服务器上实现了。
+
+#### servlet容器对url的匹配过程：
+当一个请求发送到servlet容器的时候，容器先会将请求的url减去当前应用上下文的路径作为servlet的映射url，比如我访问的是
+http://localhost/test/aaa.html，我的应用上下文是test，容器会将http://localhost/test去掉，剩下的/aaa.html部分拿来做servlet的
+映射匹配。这个映射匹配过程是有顺序的，而且当有一个servlet匹配成功以后，就不会去理会剩下的servlet了（filter不同，后文会提到）。
+其匹配规则和顺序如下：
+1. 精确路径匹配。例子：比如servletA 的url-pattern为 /test，servletB的url-pattern为 /* ，这个时候，如果我访问的url为http://localhost/test ，这个时候容器就会先 进行精确路径匹配，发现/test正好被servletA精确匹配，那么就去调用servletA，也不会去理会其他的servlet了。
+2. 最长路径匹配。例子：servletA的url-pattern为/test/*，而servletB的url-pattern为/test/a/*，此时访问http://localhost/test/a时，容器会选择路径最长的servlet来匹配，也就是这里的servletB。
+3. 扩展匹配，如果url最后一段包含扩展，容器将会根据扩展选择合适的servlet。例子：servletA的url-pattern：*.action
+4. 如果前面三条规则都没有找到一个servlet，容器会根据url选择对应的请求资源。如果应用定义了一个default servlet，则容器会将请求丢给default servlet（什么是default servlet?后面会讲）。
+
+#### 在Servlet中如何获取Session对象，如何获取Cookie？
+使用request对象的getSession方法获取session，通过getCookies获取Cookie
