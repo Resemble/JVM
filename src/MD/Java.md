@@ -66,6 +66,8 @@ sleep()睡眠时，保持`对象锁`，仍然占有该锁；
 而wait()睡眠时，释放对象锁。
 但是wait()和sleep()都可以通过interrupt()方法打断线程的暂停状态，从而使线程立刻抛出InterruptedException（但不建议使用该方法）。
 
+interrupt 就像是设置了一个状态位，想要线程挂线程就挂
+
 ## Java 锁
 
 ### 共享锁【S锁】 读锁，读时别人不能加写锁可以加读锁
@@ -795,10 +797,16 @@ public final class System
 public final class Void
 
 ### 关于String类，要了解常量池的概念
-String s = new String(“xyz”);  //创建了几个对象
+String s1 = new String(“xyz”);  //创建了几个对象
 答案： 1个或2个， 如果”xyz”已经存在于常量池中，则只在堆中创建”xyz”对象的一个拷贝，否则还要在常量池中在创建一份
-String s = "a"+"b"+"c"+"d"; //创建了几个对象
+String s2 = "a"+"b"+"c"+"d"; //创建了几个对象
 答案： 这个和JVM实现有关， 如果常量池为空，可能是1个也可能是7个等
+String s3 = "abc" // 创建了几个对象
+常量池没有创建一个，常量池有不创建
+常量池在方法区
+String实质是字符数组，两个特点：1、该类不可被继承；2、不可变性(immutable)。
+
+
 ### 相关类： StringBuffer, StringBuilder
 从源代码的角度聊聊java中StringBuffer、StringBuilder、String中的字符串拼接
 String为immutable, 不可更改的，每次String对象做累加时都会创建StringBuilder对象， 效率低下。
@@ -813,6 +821,10 @@ StringBuffer是线程安全的
 
 `String不是基本数据类型，而是一个类（class）`，是Java编程语言中的字符串。String对象是char的有序集合，并且该值是不可变的。
 因为java.lang.String类是final类型的，因此不可以继承这个类、不能修改这个类。为了提高效率节省空间，我们应该用StringBuffer类。
+
+
+
+
 ##### Java的8大基本数据类型分别是：
 整数类 byte, short, int, long
 浮点类 double, float
@@ -1069,3 +1081,12 @@ http://localhost/test/aaa.html，我的应用上下文是test，容器会将http
 
 #### 在Servlet中如何获取Session对象，如何获取Cookie？
 使用request对象的getSession方法获取session，通过getCookies获取Cookie
+
+### 线程终止的方法
+线程错误终止之destroy与stop方法
+- 线程的正确终止
+在上述的destroy和stop方法都一一被否定之后，那还有什么方式能够正确多终止线程呢？总的来说，在java中有两种解决方案：
+1. 标志，在run方法中通过一个标记来进行结束，由于该方式很寻常就不做举例
+2. interrupt，通过异常中断
+从程序到运行结果来看，当工作线程进入sleep（即阻塞）的时候，调用interrupt方法，将会促使线程抛出异常。
+结论：interrupt能够中断阻塞状态的线程，不能中断非阻塞的线程。
