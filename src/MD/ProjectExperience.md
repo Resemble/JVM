@@ -314,11 +314,11 @@ BeautifulSoup是一个库，而XPath是一种技术，python中最常用的XPath
  性能 lxml >> BeautifulSoup
  易用性  BeautifulSoup >> lxml
  
-### Selenium 和 PhatomJs
-想要模拟下拉操作(即 js 加载的页面)，我们需要用到两个工具，一个是PhatomJs，一个是Selenium。
+### Selenium 和 PhantomJs
+想要模拟下拉操作(即 js 加载的页面)，我们需要用到两个工具，一个是PhantomJs，一个是Selenium。
 - Selenium是一个开源的和便携式的自动化软件测试工具，用于测试web应用程序有能力在各种浏览器和操作系统下运行。
 Selenium实质上是一个`自动化测试工具`，能够`模拟用户的一些行为`操作，比如下拉网页。
-- PhatomJS其实就是一个`没有界面的浏览器`，最主要的功能是能够读取js加载的页面。
+- PhantomJS其实就是一个`没有界面的浏览器`，最主要的功能是能够读取js加载的页面。
 其中PhantomJS同时可以换成Chrome、Firefox、Ie等等，但是PhantomJS是一个`无头的浏览器`，运行是不会跳出相应的浏览器，运行相对效率较高。
 在调试中可以先换成Chrome，方便调试，最后再换成PhantomJS即可。
 ```

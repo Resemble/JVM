@@ -75,7 +75,7 @@ Spring AOP中，当拦截对象实现了接口时，生成方式是用JDK的Prox
 表示层调用--->代理对象(日志管理)-->调用目标对象
 
 #### 动态代理原理：spring AOP采用动态代理来实现 
-(1)实现InvocationHandler接口
+(1)实现InvocationHandler接口，实现其中invoke方法，invoke里面有先做后做什么
 (2)创建代理类(通过java API)
 Proxy.newProxyInstance(动态加载代理类,代理类实现接口,使用handler);
 (3)调用invoke方法(虚拟机自动调用方法)

@@ -182,8 +182,10 @@ CAS算法；unsafe.compareAndSwapInt(this, valueOffset, expect, update);  `CAS(C
 与Java8的HashMap有相通之处，底层依然由`“数组”+链表+红黑树`；
 底层结构存放的是TreeBin对象，而不是TreeNode对象；
 CAS作为知名无锁算法，那ConcurrentHashMap就没用锁了么？当然不是，hash值相同的`链表的头结点还是会synchronized上锁`。 
-
-
+在ConcurrentHashMap中，随处可以看到U, 大量使用了U.compareAndSwapXXX的方法，这个方法是利用一个CAS算法实现无锁化的修改值的操作，
+他可以大大降低锁代理的性能消耗。
+不允许null的键 
+可以看出，ConcurrentHashMap和HashMap在对待null键的情况下截然不同，HashMap专门开辟了一块空间用于存储null键的情况，而ConcurrentHashMap则直接抛出空值针异常。 
 
 ### LinkedHashMap 的实现原理
 `LinkedHashMap 可以选择按照访问顺序进行排序。`
