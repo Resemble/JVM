@@ -1083,10 +1083,130 @@ http://localhost/test/aaa.html，我的应用上下文是test，容器会将http
 使用request对象的getSession方法获取session，通过getCookies获取Cookie
 
 ### 线程终止的方法
-线程错误终止之destroy与stop方法
+线程错误终止之destroy与stop方法，stop后线程马上释放锁，可能造成数据不同步。stop可能造成线程清理工作没有完成。
 - 线程的正确终止
 在上述的destroy和stop方法都一一被否定之后，那还有什么方式能够正确多终止线程呢？总的来说，在java中有两种解决方案：
 1. 标志，在run方法中通过一个标记来进行结束，由于该方式很寻常就不做举例
 2. interrupt，通过异常中断
 从程序到运行结果来看，当工作线程进入sleep（即阻塞）的时候，调用interrupt方法，将会促使线程抛出异常。
-结论：interrupt能够中断阻塞状态的线程，不能中断非阻塞的线程。
+
+中断是通过调用Thread.interrupt()方法来做的. 这个方法通过修改了被调用线程的中断状态来告知那个线程, 说它被中断了. 对于非阻塞中的线程, 
+只是改变了中断状态, 即Thread.isInterrupted()将返回true; 对于可取消的阻塞状态中的线程, 比如等待在这些函数上的线程, Thread.sleep(),
+Object.wait(), Thread.join(), 这个线程收到中断信号后, 会抛出InterruptedException, 同时会把中断状态置回为true.但调用
+Thread.interrupted()会对中断状态进行复位。阻塞和非阻塞线程的区别在于是否有InterruptedException。
+
+通过interrupt()和.interrupted()方法两者的配合可以实现正常去停止一个线程，线程A通过调用线程B的interrupt方法通知线程B让它结束线程，
+在线程B的run方法内部，通过循环检查.interrupted()方法是否为真来接收线程A的信号，如果为真就可以抛出一个异常，在catch中完成一些清理工作，
+然后结束线程。Thread.interrupted()会清除标志位，并不是代表线程又恢复了，可以理解为仅仅是代表它已经响应完了这个中断信号然后又重新
+置为可以再次接收信号的状态。
+
+适用场景：
+在某个子线程中为了等待一些特定条件的到来, 你调用了Thread.sleep(10000), 预期线程睡10秒之后自己醒来, 但是如果这个特定条件提前到来的话,
+来通知一个处于Sleep的线程。又比如说.线程通过调用子线程的join方法阻塞自己以等待子线程结束, 但是子线程运行过程中发现自己没办法在短时间内结束, 
+于是它需要想办法告诉主线程别等我了. 这些情况下, 就需要中断.
+
+#### 实际上引入泛型的主要目标有以下几点：
+- 类型安全 
+泛型的主要目标是提高 Java 程序的类型安全
+`编译时期就可以检查出因 Java 类型不正确导致的 ClassCastException 异常`  其他的 object 在编译没有异常，运行报错
+符合越早出错代价越小原则
+- 消除强制类型转换 
+`泛型的一个附带好处是，使用时直接得到目标类型，消除许多强制类型转换`
+所得即所需，这使得代码更加可读，并且减少了出错机会
+- 潜在的性能收益 
+由于泛型的实现方式，支持泛型（几乎）不需要 JVM 或类文件更改
+所有工作都在编译器中完成
+编译器生成的代码跟不使用泛型（和强制类型转换）时所写的代码几乎一致，只是更能确保类型安全而已
+```java
+public class ListContainer<T> {
+    private T t;
+    public T getObj() {
+        return t;
+    }
+    public void setObj(T t) {
+        this.t= t;
+    }
+}
+```
+
+#### substring 左闭右开
+String string = "0123456789";
+string.substring(5);   // 56789
+string.substring(5, 7); // 56
+
+#### transient 易变的
+不会序列化它
+
+#### 作用域
+作用域	    当前类	同一包内    	子孙类	其他包
+public	    √	    √	        √	    √
+protected	√	    √	        √	    ×
+default	    √	    √	        ×	    ×
+private	    √	    ×	        ×	    ×
+
+
+### 面向对象编程有三大特性：封装、继承、多态。
+- 封装隐藏了类的内部实现机制，可以在不影响使用的情况下改变类的内部结构，同时也保护了数据。对外界而已它的内部细节是隐藏的，
+暴露给外界的只是它的访问方法。
+- 继承是为了重用父类代码。两个类若存在IS-A的关系就可以使用继承。，同时继承也为实现多态做了铺垫。
+- 所谓多态就是指程序中定义的引用变量所指向的具体类型和通过该引用变量发出的方法调用在编程时并不确定，而是在程序运行期间才确定，即一个引用变量倒底会指向哪个类的实例对象，该引用变量发出的方法调用到底是哪个类中实现的方法，必须在由程序运行期间才能决定。
+
+### java多态 重载 VS 重写
+#### 重载(Overloading)
+（1） 方法重载是让类以统一的方式处理不同类型数据的一种手段。多个同名函数同时存在，具有不同的参数个数/类型。
+重载Overloading是一个类中多态性的一种表现。
+（2） Java的方法重载，就是在类中可以创建多个方法，它们`具有相同的名字，但具有不同的参数和不同的定义。`
+调用方法时通过传递给它们的不同参数个数和参数类型来决定具体使用哪个方法, 这就是多态性。
+（3） 重载的时候，方法名要一样，但是参数类型和个数不一样，返回值类型可以相同也可以不相同。无法以返回型别作为重载函数的区分标准。
+
+#### 重写（Overriding） 
+（1） `父类与子类之间的多态性`，对父类的函数进行重新定义。如果在子类中定义某方法与其父类有相同的名称和参数，我们说该方法被重写 (Overriding)。
+在Java中，子类可继承父类中的方法，而不需要重新编写相同的方法。但有时子类并不想原封不动地继承父类的方法，而是想作一定的修改，这就需要采用方法的重写。
+方法重写又称方法覆盖。
+（2）若子类中的方法与父类中的某一方法具有`相同的方法名、返回类型和参数表`，则新方法将覆盖原有的方法。
+如需父类中原有的方法，可使用super关键字，该关键字引用了当前类的父类。
+（3）子类函数的访问修饰权限不能少于父类的；
+##### 重写方法的规则：
+1、参数列表必须完全与被重写的方法相同，否则不能称其为重写而是重载。
+2、返回的类型必须一直与被重写的方法的返回类型相同，否则不能称其为重写而是重载。
+3、访问修饰符的限制一定要大于被重写方法的访问修饰符（public>protected>default>private）
+4、重写方法一定不能抛出新的检查异常或者比被重写方法申明更加宽泛的检查型异常。例如：
+父类的一个方法申明了一个检查异常IOException，在重写这个方法是就不能抛出Exception,只能抛出IOException的子类异常，可以抛出非检查异常。
+##### 而重载的规则：
+1、必须具有不同的参数列表；
+2、可以有不责骂的返回类型，只要参数列表不同就可以了；
+3、可以有不同的访问修饰符；
+4、可以抛出不同的异常；
+
+
+####  submit与execute区别
+（1）可以接受的任务类型
+execute只能接受Runnable类型的任务
+submit不管是Runnable还是Callable类型的任务都可以接受，但是Runnable返回值均为void，所以使用Future的get()获得的还是null
+（2）返回值
+由Callable和Runnable的区别可知：
+execute没有返回值
+submit有返回值，所以需要返回值的时候必须使用submit，返回一个future
+（3）异常
+1.execute中抛出异常
+execute中的是Runnable接口的实现，所以只能使用try、catch来捕获CheckedException，通过实现UncaughtExceptionHande接口处理UncheckedException
+即和普通线程的处理方式完全一致
+2.submit中抛出异常
+不管提交的是Runnable还是Callable类型的任务，如果不对返回值Future调用get()方法，都会吃掉异常，就是任务里面 throw Exception，这边又没有对异常处理。
+
+#### Future VS FutureTask
+FutureTask既有Future又有Task的功能如：
+FutureTask<Integer> futureTask = new FutureTask<Integer>(task);
+Future future = executorService.submit(futureTask);  // submit有返回值
+futureTask.get()  //返回线程里面的返回值
+一般 Future:
+Future<Integer> future = executorService.submit(task);
+future.get()
+
+
+
+
+
+
+
+
