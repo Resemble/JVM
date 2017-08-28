@@ -119,6 +119,19 @@ IO的局限：IO是面向流的，阻塞式的，串行的一个过程
 的连接请求都会注册到`多路复用器`上，多路复用器轮询到连接有I/O请求时才启动一个线程进行处理。 NIO则是面向缓冲区的，非阻塞式的，
 基于选择器的，`用一个线程来轮询监控多个数据传输通道`，哪个通道准备好了（即有了一组可以处理的数据），就处理哪个通道。
 
+- Channel
+相对于BIO的流，NIO抽象出了新的通道（Channel）作为输入输出的通道，并且提供了缓存（Buffer）的支持，在进行读操作时，需要使用Buffer
+分配空间，然后将数据从Channel中读入Buffer中，对于Channel的写操作，也需要现将数据写入Buffer，然后将Buffer写入Channel中。
+Channel和IO中的Stream(流)是差不多一个等级的。只不过Stream是单向的，譬如：InputStream, OutputStream。而Channel是双向的，
+既可以用来进行读操作，又可以用来进行写操作，NIO中的Channel的主要实现有：FileChannel、DatagramChannel、SocketChannel、ServerSocketChannel；通过看名字就可以猜出个所以然来：分别可以对应文件IO、UDP和TCP（Server和Client）。
+- Buffer
+NIO中的关键Buffer实现有：ByteBuffer、CharBuffer、DoubleBuffer、 FloatBuffer、IntBuffer、 LongBuffer,、ShortBuffer，分别对应
+基本数据类型: byte、char、double、 float、int、 long、 short。当然NIO中还有MappedByteBuffer, HeapByteBuffer, DirectByteBuffer等这里先不具体陈述其用法细节。
+- Selector
+Selector 是NIO相对于BIO实现多路复用的基础，Selector 运行单线程处理多个 Channel，如果你的应用打开了多个通道，但每个连接的流量都很低，
+使用 Selector 就会很方便。例如在一个聊天服务器中。要使用 Selector , 得向 Selector 注册 Channel，然后调用它的 select() 方法。
+这个方法会一直阻塞到某个注册的通道有事件就绪。一旦这个方法返回，线程就可以处理这些事件，事件的例子有如新的连接进来、数据接收等。
+
 3、AIO(Asynchronous io、NIO.2)是`一个有效请求一个线程`。客户端的I/O请求都是由OS先完成了再通知服务器应用去启动线程进行处理，
 每个线程不必亲自处理io，而是`委派os来处理`，并且也不需要等待io完成了，如果完成后，os会通知的。 
 
@@ -657,6 +670,23 @@ Content-Type:multipart/form-data;
 
 - text/xml
 它是一种使用 HTTP 作为传输协议，XML 作为编码方式的远程调用规范。
+
+#### 从输入URL到页面加载发生了什么
+总体来说分为以下几个过程:
+- 最开始查自己的host文件
+- DNS解析
+递归和迭代查询的过程
+比如输入www.google.com，先向本地域名服务器 -> 根域名服务器 -> 本地域名服务器 -> 顶级域名服务器 -> 本地域名服务器 -> google.com域名服务器，查到了ip 
+- TCP连接
+- 发送HTTP请求
+- 服务器处理请求并返回HTTP报文
+- 浏览器解析渲染页面
+- 连接结束
+
+
+
+
+
 
 
 
