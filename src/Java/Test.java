@@ -14,6 +14,10 @@ import java.util.Vector;
 public class Test {
 
     public static void main(String[] args) {
+        String string = "0123456789";
+        System.out.println(string.substring(5));
+        System.out.println(string.substring(5, 7));
+
 //        System.out.println("\\\"");
 //        System.out.println("\\'");
 //        System.out.println("\"");
@@ -21,7 +25,7 @@ public class Test {
 //        System.out.println("/'");
 //
 //        failFastTest();
-        stringTest();
+//        stringTest();
     }
 
 
