@@ -94,7 +94,7 @@ ReentrantLock类提供了一些高级功能，主要有以下3项：
 1.等待可中断，持有锁的线程长期不释放的时候，`正在等待的线程可以选择放弃等待`，这相当于Synchronized来说可以避免出现死锁的情况。
 2.公平锁，多个线程等待同一个锁时，`必须按照申请锁的时间顺序获得锁`，Synchronized锁非公平锁，`ReentrantLock默认的构造函数是创建的
 非公平锁`，可以通过参数true设为公平锁，但公平锁表现的性能不是很好。
-3.`锁绑定多个条件`，一个ReentrantLock对象可以同时绑定对个对象。
+3.`锁绑定多个条件`，一个ReentrantLock对象可以同时绑定几个对象。绑定多个Condition对象
 
 ### 公平锁 VS 非公平锁
 公平锁（Fair）：加锁前检查是否有排队等待的线程，`优先排队等待的线程，先来先得 `
@@ -423,7 +423,7 @@ JAVA反射机制是在运行状态中，对于任意一个类，都能够知道�
 #### 关于类加载器
 在Proxy类中的newProxyInstance()方法中需要一个ClassLoader类的实例，ClassLoader实际上对应的是类加载器，在Java中主要有以下三种类加载器：
 ① Booststrap ClassLoader：此加载器采用C++编写，通常加载jre/lib/rt.jar，一般开发中是看不到的； 
-② Extendsion ClassLoader：用来进行扩展类的加载，通常加载jre/lib/ext/*.jar; 
+② Extension ClassLoader：用来进行扩展类的加载，通常加载jre/lib/ext/*.jar; 
 ③ AppClassLoader：(默认)加载classpath指定的类，是最常使用的是一种加载器；
 
 
@@ -1187,6 +1187,7 @@ submit不管是Runnable还是Callable类型的任务都可以接受，但是Runn
 由Callable和Runnable的区别可知：
 execute没有返回值
 submit有返回值，所以需要返回值的时候必须使用submit，返回一个future
+submit方法最终会调用execute方法来进行操作，只是他提供了一个Future来托管返回值的处理而已，当你调用需要有返回值的信息时，你用它来处理是比较好的
 （3）异常
 1.execute中抛出异常
 execute中的是Runnable接口的实现，所以只能使用try、catch来捕获CheckedException，通过实现UncaughtExceptionHande接口处理UncheckedException
@@ -1203,7 +1204,30 @@ futureTask.get()  //返回线程里面的返回值
 Future<Integer> future = executorService.submit(task);
 future.get()
 
+### 线程池
+所谓线程池，那么就是相当于有一个池子，线程就放在这个池子中进行重复利用，能够减去了线程的创建和销毁所带来的代价。
+整个线程池的实现原理应该是 workQueue 中不断的取出需要执行的任务，放在 workers 中进行处理。
+private final HashSet workers = new HashSet();
+private final BlockingQueue workQueue;
 
+execute实现:
+具体的执行流程如下：
+1、workerCountOf方法根据ctl的低29位，得到线程池的当前线程数，如果线程数小于corePoolSize，则执行addWorker方法创建新的线程执行任务；
+否则执行步骤（2）；
+2、如果线程池处于RUNNING状态，且把提交的任务成功放入阻塞队列中，则执行步骤（3），否则执行步骤（4）；
+3、再次检查线程池的状态，如果线程池没有RUNNING，且成功从阻塞队列中删除任务，则执行reject方法处理任务；
+4、执行addWorker方法创建新的线程执行任务，如果addWoker执行失败，则执行reject方法处理任务；
+
+接着 如果是 addWorker，那么就会 new Worker(task) -》调用其中 run() 方法，在Worker 的run() 方法中，调用 runWorker(this); 
+方法 -》在该方法中就会具体执行我们的任务 task.run(); 同时这个 runWorker方法相当于是个死循环，正常情况下就会一直取出 任务队列中的
+任务来执行，这就保证了线程 不会销毁。
+
+
+#### BlockingQueue 
+当队列中没有数据的情况下，消费者端的所有线程都会被自动阻塞（挂起），直到有数据放入队列。
+当队列中填满数据的情况下，生产者端的所有线程都会被自动阻塞（挂起），直到队列中有空的位置，线程被自动唤醒。
+这也是我们在多线程环境下，为什么需要BlockingQueue的原因。作为BlockingQueue的使用者，我们再也不需要关心什么时候需要阻塞线程，
+什么时候需要唤醒线程，因为这一切BlockingQueue都给你一手包办了。
 
 
 
