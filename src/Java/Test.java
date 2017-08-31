@@ -26,6 +26,14 @@ public class Test {
 //
 //        failFastTest();
 //        stringTest();
+
+        System.out.println(Math.round(4.4));
+        System.out.println(Math.round(4.5));
+        System.out.println(Math.round(-4.4));
+        System.out.println(Math.round(-4.5));
+        System.out.println(Math.round(-4.6));
+
+
     }
 
 
