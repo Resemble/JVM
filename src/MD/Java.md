@@ -132,7 +132,21 @@ synchronize 获得锁和释放锁的方式都是在块结构中，当获得多�
 Lock一定要求程序员手工释放，并且必须在finally从句中释放。Lock 的 tryLock() 方法可以采用非阻塞(zu se)方式获取锁。
 
 
-### synchronize和ReentrantLock的区别
+### synchronize和 ReentrantLock 的区别
+#### ReentrantLock 实现原理
+CLH队列：带头结点的双向非循环链表
+ReentrantLock的基本实现可以概括为：先通过CAS尝试获取锁。如果此时已经有线程占据了锁，那就加入CLH队列并且被挂起。当锁被释放之后，
+排在CLH队列队首的线程会被唤醒，然后CAS再次尝试获取锁。在这个时候，如果：
+    非公平锁：如果同时还有另一个线程进来尝试获取，那么有可能会让这个线程抢先获取；
+    公平锁：如果同时还有另一个线程进来尝试获取，当它发现自己不是在队首的话，就会排到队尾，由队首的线程获取到锁。
+
+#### synchronized 实现原理
+每个对象都有一个锁，也就是`监视器（monitor）`。当monitor被占有时就表示它被锁定。线程执行monitorenter指令时尝试获取对象所对应的
+monitor的所有权，过程如下：
+- 如果monitor的进入数为0，则该线程进入monitor，然后将进入数设置为1，该线程即为monitor的所有者;
+- 如果线程已经拥有了该monitor，只是重新进入，则进入monitor的进入数加1;
+- 如果其他线程已经占用了monitor，则该线程进入阻塞状态，直到monitor的进入数为0，再重新尝试获取monitor的所有权。
+
 ReentrantLock 是 Lock 接口的实现类
 （1）什么情况下可以使用 ReentrantLock
 使用synchronized 的一些限制： 
@@ -635,7 +649,42 @@ ThreadLocal为变量在每个线程中都创建了一个`副本`，那么每个�
 
 - CompletionService         : ExecutorService的扩展，可以获得线程执行结果的
 - CountDownLatch            ：一个同步辅助类，在完成一组正在其他线程中执行的操作之前，它允许一个或多个线程一直等待。 
-- CyclicBarrier             ：一个同步辅助类，它允许一组线程互相等待，直到到达某个公共屏障点 
+- CyclicBarrier             ：一个同步辅助类，它允许一组线程`互相等待`，直到到达某个公共屏障点 
+
+#### CountDownLatch VS CyclicBarrier
+CountDownLatch : 一个线程(或者多个)， 等待另外N个线程完成某个事情之后才能执行。  
+CyclicBarrier : N个线程相互等待，任何一个线程完成之前，所有的线程都必须等待。
+这样应该就清楚一点了，对于CountDownLatch来说，重点是那个“一个线程”, 是它在等待， 而另外那N的线程在把“某个事情”做完之后可以继续等待，
+可以终止。而对于CyclicBarrier来说，重点是那N个线程，他们之间任何一个没有完成，所有的线程都必须等待。
+CountDownLatch 是计数器, 线程完成一个就记一个, 就像 报数一样, 只不过是递减的.
+而CyclicBarrier更像一个水闸, 线程执行就想水流, 在水闸处都会堵住, 等到水满(线程到齐)了, 才开始泄流.
+
+   CountDownLatch           latch.await();  //调用此方法会一直阻塞当前线程，直到计时器的值为0  
+
+模块13 完成，耗时:1844                         
+模块15 完成，耗时:1844  
+模块19 完成，耗时:1848  
+模块1 完成，耗时:1882  
+模块18 完成，耗时:1924  
+模块9 完成，耗时:1985  
+所有任务都完成，任务完成  
+
+   CyclicBarrier
+要吃饭，必须所有人都到终点，oK?  
+不放弃不抛弃！  
+pool-1-thread-1:Go  
+pool-1-thread-2:Go  
+pool-1-thread-3:Go  
+pool-1-thread-4:Go  
+pool-1-thread-3:我到终点了  
+pool-1-thread-4:我到终点了  
+pool-1-thread-1:我到终点了  
+pool-1-thread-2:我到终点了  
+好了，大家可以去吃饭了……  
+pool-1-thread-2:终于可以吃饭啦！  
+pool-1-thread-3:终于可以吃饭啦！  
+pool-1-thread-4:终于可以吃饭啦！  
+pool-1-thread-1:终于可以吃饭啦！  
 
 
 
@@ -1010,7 +1059,9 @@ InputStreamReader isr = newInputStreamReader(fis, "UTF8");
 ceil()：将小数部分一律向整数部分进位。
 floor()：一律舍去，仅保留整数。
 round()：进行`四舍五入`
-
+往上入：
+Math.round(-4.5)  -4
+Math.round(4.5)    5
 
 
 ### Enum
@@ -1113,10 +1164,12 @@ Thread.interrupted()会对中断状态进行复位。阻塞和非阻塞线程的
 - 消除强制类型转换 
 `泛型的一个附带好处是，使用时直接得到目标类型，消除许多强制类型转换`
 所得即所需，这使得代码更加可读，并且减少了出错机会
-- 潜在的性能收益 
-由于泛型的实现方式，支持泛型（几乎）不需要 JVM 或类文件更改
-所有工作都在编译器中完成
+
 编译器生成的代码跟不使用泛型（和强制类型转换）时所写的代码几乎一致，只是更能确保类型安全而已
+
+##### 在开发中使用泛型取代非泛型的数据类型（比如用ArrayList<String>取代ArrayList），程序的运行时性能会变得更好。（） 错误
+泛型仅仅是java的语法糖，它不会影响java虚拟机生成的汇编代码，在编译阶段，虚拟机就会把泛型的类型擦除，还原成没有泛型的代码，顶多编译
+速度稍微慢一些，执行速度是完全没有什么区别的.
 ```java
 public class ListContainer<T> {
     private T t;
@@ -1248,6 +1301,34 @@ maximumPoolSize会减少CPU的使用、操作系统资源、上下文切换的�
 什么时候需要唤醒线程，因为这一切BlockingQueue都给你一手包办了。
 
 
+#### handler：拒绝处理任务的策略
+AbortPolicy：丢弃任务并抛出 RejectedExecutionException 异常。（默认这种）
+DiscardPolicy：也是丢弃任务，但是不抛出异常
+DiscardOldestPolicy：丢弃队列最前面的任务，然后重新尝试执行任务（重复此过程）
+CallerRunsPolicy：由调用线程处理该任务
+
+
+#### 并发队列ConcurrentLinkedQueue、阻塞队列ArrayBlockingQueue、阻塞队列LinkedBlockingQueue 区别
+三者区别与联系： 联系，三者 都是线程安全的。区别，就是 并发  和 阻塞，`前者为并发队列，因为采用cas算法，所以能够高并发的处理；
+后2者采用锁机制，所以是阻塞的。`注意点就是前者由于采用cas算法，虽然能高并发，但cas的特点造成操作的危险性，怎么危险性可以去查一下cas算法
+（但一些多消费性的队列还是用的它，原因看下边使用场景中的说明）
+后2者区别：联系，第2和第3都是阻塞队列，都是采用锁，都有阻塞容器Condition，通过Condition阻塞容量为空时的取操作和容量满时的写操作第。
+区别，`第2就一个整锁，第3是2个锁`，所以第2第3的锁机制不一样，第3比第2吞吐量 大，并发性能也比第2高。
+后2者的具体信息:   LinkedBlockingQueue是BlockingQueue的一种使用Link List的实现，`它对头和尾（取和添加操作）采用两把不同的锁，`
+相对于ArrayBlockingQueue提高了吞吐量。它也是一种阻塞型的容器，适合于实现“消费者生产者”模式。
+ArrayBlockingQueue是对BlockingQueue的一个数组实现，`它使用一把全局的锁并行对queue的读写操作`，同时使用两个Condition阻塞容量为空时
+的取操作和容量满时的写操作。
+正因为LinkedBlockingQueue使用两个独立的锁控制数据同步，所以可以使存取两种操作并行执行，从而提高并发效率。而ArrayBlockingQueue使用
+一把锁，造成在存取两种操作争抢一把锁，而使得性能相对低下。LinkedBlockingQueue可以不设置队列容量，默认为Integer.MAX_VALUE.其容易
+造成内存溢出，一般要设置其值。
+
+LinkedBlockingQueue 可以指定容量，也可以不指定，不指定的话，默认最大是Integer.MAX_VALUE，其中主要用到put和take方法，put方法在
+队列满的时候会阻塞直到有队列成员被消费，take方法在队列空的时候会阻塞，直到有队列成员被放进来。
+ConcurrentLinkedQueue有两个volatile的线程共享变量：head，tail。要保证这个队列的线程安全就是保证对这两个Node的引用的访问
+（更新，查看）的原子性和可见性，由于volatile本身能够保证可见性，所以就是对其修改的原子性要被保证。
+
+
+
 ### static 关键字
 - 在JVM加载一个类的时候，若该类存在static修饰的成员变量和成员方法，则会为这些成员变量和成员方法在固定的位置开辟一个固定大小的内存区域，
 有了这些“固定”的特性，那么JVM就可以非常方便地访问他们。同时如果静态的成员变量和成员方法不出作用域的话，它们的句柄都会保持不变。
@@ -1264,6 +1345,9 @@ static修饰的方法我们称之为静态方法，我们通过类名对其进�
 Static方法是类中的一种特殊方法，我们只有在真正需要他们的时候才会将方法声明为static。如Math类的所有方法都是静态static的。
 2.3、static代码块
 被static修饰的代码块，我们称之为静态代码块，静态代码块会随着类的加载一块执行，而且他可以随意放，可以存在于该了的任何地方。
+
+
+
 
 
 
