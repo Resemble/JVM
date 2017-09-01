@@ -13,7 +13,7 @@ import java.util.Vector;
  */
 public class Test {
 
-    public static void main(String[] args) {
+        public static void main(String[] args) {
         String string = "0123456789";
         System.out.println(string.substring(5));
         System.out.println(string.substring(5, 7));
@@ -26,6 +26,8 @@ public class Test {
 //
 //        failFastTest();
 //        stringTest();
+        String[] strings = {"fd", "fd", "fds"};
+        String strings1[] = {"fd", "fd", "fds"};
 
         System.out.println(Math.round(4.4));
         System.out.println(Math.round(4.5));
@@ -61,11 +63,11 @@ public class Test {
     }
 
     public static void stringTest() {
-        String s="Hello";
-        s="Java";
-        String s1="Hello";
-        String s2=new String("Hello");
-        String s3=new String("Hello");
+        String s = "Hello";
+        s = "Java";
+        String s1 = "Hello";
+        String s2 = new String("Hello");
+        String s3 = new String("Hello");
         if (s == s1) {
             System.out.println("s == s1");
         } else {
