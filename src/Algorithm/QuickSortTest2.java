@@ -1,4 +1,4 @@
-package Sort;
+package Algorithm;
 
 import java.util.concurrent.ThreadLocalRandom;
 

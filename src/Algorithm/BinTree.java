@@ -1,4 +1,4 @@
-package Second;
+package Algorithm;
 
 import java.util.Stack;
 
@@ -7,12 +7,20 @@ import java.util.Stack;
  * @version V1.0
  * @Title:
  * @Package Second
- * @Description: 二叉树的递归和非递归遍历
+ * @Description: 二叉树的递归和非递
  * @date 2017/8/11 15:22
  */
 
-
 public class BinTree {
+    static class TreeNode {
+        int val = 0;
+        TreeNode left = null;
+        TreeNode right = null;
+
+        public TreeNode(int val) {
+            this.val = val;
+        }
+    }
 
     // 先序遍历递归
     public static void preOrder(TreeNode node) {
@@ -50,8 +58,8 @@ public class BinTree {
     // 先序遍历非递归
     public static void preOrder2(TreeNode node) {
         Stack<TreeNode> stack = new Stack<>();
-        while(node != null || !stack.isEmpty()) {
-            while(node != null) {
+        while (node != null || !stack.isEmpty()) {
+            while (node != null) {
                 System.out.print(node.val + " ");
                 stack.push(node);
                 node = node.left;
@@ -66,12 +74,12 @@ public class BinTree {
     // 中序遍历非递归
     public static void inOrder2(TreeNode node) {
         Stack<TreeNode> stack = new Stack<>();
-        while(node != null || !stack.isEmpty()) {
-            while(node != null) {
+        while (node != null || !stack.isEmpty()) {
+            while (node != null) {
                 stack.push(node);
                 node = node.left;
             }
-            if(!stack.isEmpty()) {
+            if (!stack.isEmpty()) {
                 node = stack.pop();
                 System.out.print(node.val + " ");
                 node = node.right;
@@ -84,8 +92,8 @@ public class BinTree {
     public static void postOrder2(TreeNode node) {
         Stack<TreeNode> stack1 = new Stack<>();
         Stack<TreeNode> stack2 = new Stack<>();
-        while(node != null || !stack1.isEmpty()) {
-            while(node != null) {
+        while (node != null || !stack1.isEmpty()) {
+            while (node != null) {
                 stack1.push(node);
                 stack2.push(node);
                 node = node.right;
@@ -114,7 +122,7 @@ public class BinTree {
          *   2     3
          *  /       \
          * 4         5
-          / \
+         / \
          7   6
          */
 
