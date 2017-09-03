@@ -423,6 +423,9 @@ TreeMap的实现是红黑树算法的实现
 对于红黑二叉树而言它主要包括三大基本操作：`左旋、右旋、着色`。
 `红黑树（Red-Black Tree，以下简称RBTree）`的实际应用非常广泛，比如Linux内核中的完全公平调度器、`高精度计时器`、`ext3文件系统`等等，
 各种语言的函数库如Java的`TreeMap`和`TreeSet`，C++ STL的map、multimap、multiset等。
+TreeMap 按照 key 排序，TreeSet 按照里面的值排序跟 priorityQueue 一样，不过优先队列是最小堆实现。
+
+
 
 ### CopyOnWriteArrayList
 CopyOnWriteArrayList是jdk `concurrent`包中提供的一个`非阻塞型`的，`线程安全`的List实现。
