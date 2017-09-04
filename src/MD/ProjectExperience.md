@@ -355,6 +355,8 @@ console.log('hello'.repeatify(3));
 热部署的目的很简单，就是为了节省应用开发和发布的时间。比如，我们在使用Tomcat或者Jboss等应用服务器开发应用时，我们经常会开启热部署
 功能。热部署，简单点来说，`就是我们将打包好的应用直接替换掉原有的应用，不用关闭或者重启服务器`，一切就是这么简单。
 
+#### shell 循环
+for i in `seq 10`; do command; done
 
 ### ehcache 热部署造成内存泄漏
 每隔一天，服务器就会报出内存溢出
@@ -372,6 +374,26 @@ spring中的提供了一个名为org.springframework.web.util.IntrospectorCleanu
 <listener-class>org.springframework.web.util.IntrospectorCleanupListener</listener-class> 
 </listener>
 ```
+当应用需要到某个类时，则会按照下面的顺序进行类加载：
+1. 使用bootstrap引导类加载器加载 JAVA_HOME/jre/lib/ext
+2. 使用system系统类加载器加载 CATALINA_HOME/bin
+3. webapp 应用类加载器 CATALINA_HOME/webapps
+* 使用应用类加载器在WEB-INF/classes中加载
+* 使用应用类加载器在WEB-INF/lib中加载
+4. 使用common类加载器在CATALINA_HOME/lib中加载
+
+##### Webapp类加载器
+正如上面内容所说，Webapp类加载器，相对于传统的Java的类加载器，最主要的区别是
+`子优先(child first)`
+也就是说，在Web应用内，需要加载一个类的时候，不是先委托给parent，而是先自己加载，在自己的类路径上找不到才会再委托parent。
+但是此处的子优先有些地方需要注意的是，Java的基础类不允许其重新加载，以及servlet-api也不允许重新加载。
+那为什么要先child之后再parent呢？我们前面说是Servlet规范规定的。但确实也是实际需要。假如我们两个应用内使用了相同命名空间里的一个class，
+一个使用的是Spring 2.x，一个使用的是Spring 3.x。如果是parent先加载的话，在第一个应用加载后，第二个应用再需要的时候，就直接从parent里拿到了，但是却不符合需要。
+另外一点是，各个Web应用的类加载器，是相互独立的，即WebappClassloader的多个实例，只有这样，多个应用之间才可能使用不同版本的相同命令空间下的类库，而不互相受影响。
+该类加载器会加载Web应用的WEB-INF/classes内的class和资源文件，以及WEB-INF/lib下的所有jar文件。
+当然，有些时候，有需要还按照传统的Java类加载器加载class时，Tomcat内提供了配置，可以实现父优先。
+##### Common 类加载器
+通过上面的class loader组织的图，可以知道Common 类加载器，是做为webapp类加载器的parent存在的。
 
 
 ### tomcat 编码出错
