@@ -141,6 +141,9 @@ ReentrantLock的基本实现可以概括为：先通过CAS尝试获取锁。如�
     公平锁：如果同时还有另一个线程进来尝试获取，当它发现自己不是在队首的话，就会排到队尾，由队首的线程获取到锁。
 
 #### synchronized 实现原理
+synchronized会在进入同步块的前后分别形成monitorenter和monitorexit字节码指令.在执行monitorenter指令时会尝试获取对象的锁,如果此没
+对象没有被锁,或者此对象已经被当前线程锁住,那么锁的计数器加一,每当monitorexit被锁的对象的计数器减一.直到为0就释放该对象的锁.由此
+synchronized是可重入的,不会出现自己把自己锁死.
 每个对象都有一个锁，也就是`监视器（monitor）`。当monitor被占有时就表示它被锁定。线程执行monitorenter指令时尝试获取对象所对应的
 monitor的所有权，过程如下：
 - 如果monitor的进入数为0，则该线程进入monitor，然后将进入数设置为1，该线程即为monitor的所有者;
@@ -159,6 +162,9 @@ ReentrantLock 没有以上的这些限制，且必须是手工释放锁。
 主要相同点：Lock能完成synchronized所实现的所有功能
 主要不同点：Lock有比synchronized更精确的线程语义和更好的性能，当许多线程都在争用同一个锁时，使用 ReentrantLock 的总体开支通常要比
  synchronized 少得多。 synchronized会自动释放锁，而`Lock一定要求程序员手工释放，并且必须在finally从句中释放`。
+ReentrantLock在性能上似乎优于Synchronized，其中在jdk1.6中略有胜出，在1.5中是远远胜出。
+
+
 
 #### 简单的总结
 #### synchronized：
@@ -172,6 +178,8 @@ ReentrantLock提供了多样化的同步，比如有时间限制的同步，可�
 和上面的类似，不激烈情况下，性能比synchronized略逊，而激烈的时候，也能维持常态。激烈的时候，Atomic的性能会优于ReentrantLock一倍左右。
 但是其有一个缺点，就是只能同步一个值，`一段代码中只能出现一个Atomic的变量，多于一个同步无效。`因为他不能在多个Atomic之间同步。
 大部分采用 CAS 
+
+
 
 ### Java NIO
 NIO（Non-blocking I/O，在Java领域，也称为New I/O），是一种同步非阻塞的I/O模型，也是I/O多路复用的基础，已经被越来越多地应用到
@@ -776,7 +784,7 @@ volatile经常用于两个两个场景：`状态标记、double check`
 - Set无序不允许元素重复。HashSet和TreeSet是两个主要的实现类。 
 - List有序且允许元素重复。ArrayList、LinkedList和Vector是三个主要的实现类。 
 - Map也属于集合系统，但和Collection接口没关系。Map是key对value的映射集合，其中key列就是一个集合。key不能重复，
-但是value可以重复。HashMap、TreeMap和Hashtable是三个主要的实现类。 SortedSet和SortedMap接口对元素按指定规则排序，
+但是value可以重复。HashMap、TreeMap和HashTable是三个主要的实现类。 SortedSet和SortedMap接口对元素按指定规则排序，
 SortedMap是对key列进行排序。  
   
 #### ArrayList和vector区别    
@@ -948,8 +956,7 @@ Object的equals方法也是用双等号（==）进行比较的，所以比较后
 Java使用自动装箱和拆箱机制，节省了常用数值的内存开销和创建对象的开销，提高了效率，`由编译器来完成，编译器会在编译期根据语法决定是否进行装箱和拆箱动作`。
  
 ### 内存溢出和内存泄漏的区别
-内存溢出是指程序在申请内存时，没有足够的内存空间供其使用，出现out of
-memory。
+内存溢出是指程序在申请内存时，没有足够的内存空间供其使用，出现out of memory。
 内存泄漏是指分配出去的内存不再使用，但是无法回收。 
  
 ### char可以存储汉字吗 
