@@ -122,6 +122,11 @@ centOs7
 - 8110大端口对外开放
 
 
+#### IMAP VS pop3
+POP3协议允许电子邮件客户端下载服务器上的邮件，但是在客户端的操作（如移动邮件、标记已读等），不会反馈到服务器上，比如通过客户端收取了
+邮箱中的3封邮件并移动到其他文件夹，邮箱服务器上的这些邮件是没有同时被移动的 。
+而IMAP提供webmail 与电子邮件客户端之间的双向通信，客户端的操作都会反馈到服务器上，对邮件进行的操作，服务器上的邮件也会做相应的动作。
+
 #### 邮件服务
 - 邮件找回密码 登陆的验证码 邮件营销（一天几千封邮件） 预热
 - 频率限制 批量发送(后台开线程定期扫描，记录发送状态进行跟踪，邮件是否打开（长宽为0，display none; href） 链接是否点击 ticket)
@@ -229,36 +234,20 @@ GETSET key value
 9.	`交付、部署`：虚拟机可以通过镜像实现环境交付的一致性，但镜像分发无法体系化；Docker在Dockerfile中记录了容器构建过程，可在集群中实现快速分发和快速部署;
 
 
-#### docker 多个容器协同工作
+#### docker 容器间通信
+- 通过端口公开（port exposure）连接
+让我们运行server_img并且把该容器命名为server1，公开其80端口：
+$ sudo docker run -itd --expose=80 --name=server1 server_img /bin/bash
+启动该容器内的Apache HTTP服务：
+$ /etc/init.d/apache2 start
+- 将宿主机端口绑定（bind）至容器端口
+我们可以按照以下命令来这么做：
+$ sudo docker run -itd -p 8080:80 --name=server2 server_img /bin/bash
+- 通过链接（link）选项去连接两个容器
 sudo docker run --name=mysql_client2 `--link=mysql_server:db` -t -i kongxx/mysql_client /usr/bin/mysql -h db -u root -pletmein  
 这里需要特别注意一下“–link=mysql_server:db”，这个参数就是告诉Docker容器需要使用“mysql_server”容器，并将其别名命名为db，这样在这
 两个容器里就可以使用“db”来作为提供mysql数据库服务的机器名。所以在最后启动参数里我们使用的是“/usr/bin/mysql -h db -u root -pletmein”
 来连接mysql数据库的。
-
-####  容器间通信的三种方式 
-容器之间可通过 IP，Docker DNS Server 或 joined 容器三种方式通信。
-- IP 通信
-两个容器要能通信，必须要有属于同一个网络的网卡。
-满足这个条件后，容器就可以通过 IP 交互了。具体做法是在容器创建时通过 --network 指定相应的网络，或者通过 docker network connect 将现有容器加入到指定网络。
-- Docker DNS Server
-通过 IP 访问容器虽然满足了通信的需求，但还是不够灵活。因为我们在部署应用之前可能无法确定 IP，部署之后再指定要访问的 IP 会比较麻烦。对于这个问题，可以通过 docker 自带的 DNS 服务解决。
-从 Docker 1.10 版本开始，docker daemon 实现了一个内嵌的 DNS server，使容器可以直接通过“容器名”通信。方法很简单，只要在启动时用 --name 为容器命名就可以了。
-下面启动两个容器 bbox1 和 bbox2：
-docker run -it --network=my_net2 --name=bbox1 busybox
-docker run -it --network=my_net2 --name=bbox2 busybox
-然后，bbox2 就可以直接 ping 到 bbox1 了：
-使用 docker DNS 有个限制：只能在 user-defined 网络中使用。
-- joined 容器
-joined 容器是另一种实现容器间通信的方式。
-joined 容器非常特别，它可以使两个或多个容器共享一个网络栈，共享网卡和配置信息，joined 容器之间可以通过 127.0.0.1 直接通信。请看下面的例子：
-先创建一个 httpd 容器，名字为 web1。
-docker run -d -it --name=web1 httpd
-然后创建 busybox 容器并通过 --network=Container:web1 指定 jointed 容器为 web1：
-请注意 busybox 容器中的网络配置信息，下面我们查看一下 web1 的网络：
-看！busybox 和 web1 的网卡 mac 地址与 IP 完全一样，它们共享了相同的网络栈。busybox 可以直接用 127.0.0.1 访问 web1 的 http 服务。
-joined 容器非常适合以下场景：
-不同容器中的程序希望通过 loopback 高效快速地通信，比如 web server 与 app server。
-希望监控其他容器的网络流量，比如运行在独立容器中的网络监控程序。
 
 
 
@@ -298,6 +287,28 @@ git flow   feature      start
                         pull
                         
 git checkout hotfix
+
+
+
+### Git VS SVN
+* git有本地库
+svn 的模式是：
+1。写代码。3。从服务器拉回服务器的当前版本库，并解决服务器版本库与本地代码的冲突。5。将本地代码提交到服务器。
+Git 分布式版本管理的模式是：
+1。写代码。2。提交到本地版本库。3。从服务器拉回服务器的当前版本库，并解决服务器版本库与本地代码的冲突。
+4。将远程库与本地代码合并结果提交到本地版本库。5。将本地版本库推到服务器。
+
+* 本地提交本地提交好处主要有3点：
+1) 断网提交2) 小步提交。可以对自己的阶段成果有跟踪，并且提高每次变更的安全性3) 本地库。这
+个和断网提交是同一个实现，但从需求角度出发则略有不同，主要是说即使只有自己一个人开发项目，也可以轻易的让自己的代码有版本跟踪，
+而不需要去费力建个什么svn server4) 本地回滚。这个其实是由于本地库的存在而产生的，但可以减少中央库上的冗余版本
+* 分支策略
+我可以开一个分支，做我喜欢的事
+gitFlow
+* tag
+
+
+
 
 
 

@@ -9,7 +9,7 @@ Mybatis首先去缓存中查询结果集，如果没有则查询数据库，如�
 key为hashCode+sqlId+Sql语句。value为从查询出来映射生成的java对象
 Mybatis的二级缓存即查询缓存，它的作用域是一个mapper的namespace，即在同一个namespace中查询sql可以从缓存中获取数据。二级缓存是可以跨SqlSession的。
 MyBatis的缓存分为一级缓存和二级缓存,
-`一级缓存放在session里面,默认就有,二级缓存放在它的命名空间里,默认是打开的,`
+`一级缓存放在session里面,默认就有,二级缓存放在它的命名空间里`
 使用二级缓存属性类需要实现Serializable序列化接口(可用来保存对象的状态),可在它的映射文件中配置
 ### MyBatis与Hibernate有哪些不同？
 Mybatis和hibernate不同，它不完全是一个ORM框架，因为MyBatis需要程序员自己编写Sql语句，不过mybatis可以通过XML或注解方式灵活配置要运行的sql语句，并将java对象和sql语句映射生成最终执行的sql，最后将sql执行的结果再映射生成java对象。 
