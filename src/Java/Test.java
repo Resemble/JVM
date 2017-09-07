@@ -13,7 +13,7 @@ import java.util.Vector;
  */
 public class Test {
 
-        public static void main(String[] args) {
+    public static void main(String[] args) {
         String string = "0123456789";
         System.out.println(string.substring(5));
         System.out.println(string.substring(5, 7));
@@ -35,7 +35,10 @@ public class Test {
         System.out.println(Math.round(-4.5));
         System.out.println(Math.round(-4.6));
 
-
+        Long l1 = 1L;
+        Long l2 = new Long(1L);
+        System.out.println(l1 == l2);
+        System.out.println(l1.equals(l2));
     }
 
 
