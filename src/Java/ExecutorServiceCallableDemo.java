@@ -16,7 +16,17 @@ import java.util.concurrent.*;
 public class ExecutorServiceCallableDemo {
 
     public static void main(String[] args) {
+        // new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS,new SynchronousQueue<Runnable>());
         ExecutorService executorService = Executors.newCachedThreadPool();
+
+        // new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>());
+        ExecutorService executorService1 = Executors.newSingleThreadExecutor();
+
+        // new ThreadPoolExecutor(nThreads, nThreads, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>());
+        ExecutorService executorService2 = Executors.newFixedThreadPool(3);
+
+        //  super(corePoolSize, Integer.MAX_VALUE, 0, NANOSECONDS, new DelayedWorkQueue());
+        ExecutorService executorService3 = Executors.newScheduledThreadPool(2);
         List<Future<String>> resultList = new ArrayList<Future<String>>();
 
         for (int i = 0; i < 10; i++) {

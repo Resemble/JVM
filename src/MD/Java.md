@@ -65,8 +65,11 @@ sleep()是Thread类的Static(静态)的方法；因此他不能改变对象的�
 sleep()睡眠时，保持`对象锁`，仍然占有该锁；
 而wait()睡眠时，释放对象锁。
 但是wait()和sleep()都可以通过interrupt()方法打断线程的暂停状态，从而使线程立刻抛出InterruptedException（但不建议使用该方法）。
+2.sleep不会立马释放对象锁，而wait会释放。
 
-interrupt 就像是设置了一个状态位，想要线程挂线程就挂
+sleep 让线程从 【running】 -> 【阻塞态】 时间结束/interrupt -> 【runnable】
+wait 让线程从 【running】 -> 【等待队列】notify  -> 【锁池】 -> 【runnable】
+
 
 ## Java 锁
 
@@ -178,6 +181,20 @@ ReentrantLock提供了多样化的同步，比如有时间限制的同步，可�
 和上面的类似，不激烈情况下，性能比synchronized略逊，而激烈的时候，也能维持常态。激烈的时候，Atomic的性能会优于ReentrantLock一倍左右。
 但是其有一个缺点，就是只能同步一个值，`一段代码中只能出现一个Atomic的变量，多于一个同步无效。`因为他不能在多个Atomic之间同步。
 大部分采用 CAS 
+
+
+#### java的对象锁和类锁：
+java的对象锁和类锁在锁的概念上基本上和内置锁是一致的，但是，两个锁实际是有很大的区别的，对象锁是用于对象实例方法，或者一个对象实例上的，
+类锁是用于类的静态方法或者一个类的class对象上的。我们知道，类的对象实例可以有很多个，但是每个类只有一个class对象，所以不同对象实例的
+对象锁是互不干扰的，但是每个类只有一个类锁。但是有一点必须注意的是，其实类锁只是一个概念上的东西，并不是真实存在的，它只是用来帮助我们
+理解锁定实例方法和静态方法的区别的。
+2个锁互不干扰
+####### 对象锁
+synchronized(this) 
+public synchronized void test2()  m,
+####### 类锁
+synchronized(TestSynchronized.class)
+public static synchronized void test2()   
 
 
 
@@ -436,6 +453,10 @@ public class test {
 getFields()获得某个类的所有的`公共（public）的字段`，包括父类。 
 getDeclaredFields()获得某个类的`所有申明的字段`，即包括`public、private 和 protected`，但是不包括父类的申明字段。 
 同样类似的还有getConstructors()和getDeclaredConstructors()，getMethods()和getDeclaredMethods()。
+
+getDeclaredMethods 访问私有方法
+
+  
   
 #### Java 反射机制
 JAVA反射机制是在运行状态中，对于任意一个类，都能够知道这个`类的所有属性和方法`；对于任意一个`对象，都能够调用它的任意一个方法和属性`；
@@ -797,6 +818,23 @@ java.util.`Collection 是一个集合接口`。它提供了对集合对象进行
 Collection接口在Java 类库中有很多具体的实现。Collection接口的意义是为各种具体的集合提供了最大化的统一操作方式。 
 java.util.`Collections 是一个包装类`。它包含有各种有关集合操作的静态多态方法。此类不能实例化，就像一个工具类，服务于Java的Collection框架。  
 Collections.sort()  
+  
+### 包装类和基本数据类型  
+1、本质
+包装类创建的是对象，拥有方法和字段.对象的调用都是通过引用对象的地址 ;
+基本类型则直接存数值. 
+2、存放空间
+对于对象大家都知道，是存放于堆中，而基本类型则存放于栈中
+相比而言，堆栈更高效，这也是java保留基本类型的原因。包装类创建的对象，可以使用api提供的一些有用的方法。
+3、用途
+对于包装类说，这些类的用途主要包含两种：
+ a、作为和基本数据类型对应的类类型存在，方便涉及到对象的操作。
+ b、包含每种基本数据类型的相关属性如最大值、最小值等，以及相关的操作方法。
+基本类型，则大多只用于代表某一参数值。
+4、多态性
+包装类是引用传递 
+基本类型是值传递  
+  
   
 ### cookie 和 session 的区别
 1. cookie 机制采用客户端保持状态的方案，session 采用的是在服务器保持状态的方案
@@ -1316,12 +1354,18 @@ maximumPoolSize会减少CPU的使用、操作系统资源、上下文切换的�
 这也是我们在多线程环境下，为什么需要BlockingQueue的原因。作为BlockingQueue的使用者，我们再也不需要关心什么时候需要阻塞线程，
 什么时候需要唤醒线程，因为这一切BlockingQueue都给你一手包办了。
 
+int corePoolSize = 1;
+int maximumPoolSize = 1;
+BlockingQueue queue = new  ArrayBlockingQueue<Runnable>(1);
+ThreadPoolExecutor pool = new ThreadPoolExecutor(corePoolSize,  maximumPoolSize, 
+        0, TimeUnit.SECONDS, queue ) ;
+pool.setRejectedExecutionHandler(new ThreadPoolExecutor.DiscardPolicy ());
 
 #### handler：拒绝处理任务的策略
 AbortPolicy：丢弃任务并抛出 RejectedExecutionException 异常。（默认这种）
 DiscardPolicy：也是丢弃任务，但是不抛出异常
 DiscardOldestPolicy：丢弃队列最前面的任务，然后重新尝试执行任务（重复此过程）
-CallerRunsPolicy：由调用线程处理该任务
+CallerRunsPolicy：由调用线程处理该任务，没有任务被抛弃，而是将由的任务分配到main线程中执行了。
 
 
 #### 并发队列ConcurrentLinkedQueue、阻塞队列ArrayBlockingQueue、阻塞队列LinkedBlockingQueue 区别

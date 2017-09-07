@@ -293,7 +293,9 @@ Trie的核心思想是空间换时间，利用字符串的公共前缀来降低�
 
 
 
-
+### java必记函数
+Character.isDigit()  // 判断是否为数字
+Arrays.sort()  // 排序
 
 
 

@@ -22,3 +22,17 @@ Hive 创建内部表时，会将`数据移动到数据仓库指向的路径`；�
 不对数据的位置做任何改变。`在删除表的时候，内部表的元数据和数据会被一起删除`， 
 而`外部表只删除元数据，不删除数据`。这样外部表相对来说更加安全些，数据组织也更加灵活，方便共享源数据。 
 外部表创建时有一个 location ，location后面跟的是目录，不是文件，hive会把整个目录下的文件都加载到表中：
+
+```scala
+object SimpleApp{
+  def main(args:Array[String]){
+    val logFile="/root/spark-1.1.0-bin-hadoop2.4/README.md"
+    val conf=new SparkConf().setAppName("SimpleApp")
+    val sc=new SparkContext(conf)
+    val logData=sc.textFile(logFile,2).cache()
+    val counts=logData.flatMap(line=>line.split(" ")).map(word=>(word,1)).reduceByKey((a,b)=>a+b).count()
+    println("There are %s words in the file".format(counts))
+  }
+}
+```
+

@@ -5,12 +5,25 @@ Mybatis在处理#{}时，会将sql中的`#{}替换为?号`，调用PreparedState
 Mybatis在处理${}时，就是把`${}替换成变量的值`。
 使用#{}可以有效的`防止SQL注入`，提高系统安全性。
 ### 简单的说一下MyBatis的一级缓存和二级缓存？
+#### 为什么说mybatis的一级缓存是session级别的？
+因为如果同一查询，但是在不同session中去执行，第二次还是会发出sql，从数据库中查询。
+Mybatis默认开启一级缓存。
 Mybatis首先去缓存中查询结果集，如果没有则查询数据库，如果有则从缓存取出返回结果集就不走数据库。Mybatis内部存储缓存使用一个HashMap，
 key为hashCode+sqlId+Sql语句。value为从查询出来映射生成的java对象
 Mybatis的二级缓存即查询缓存，它的作用域是一个mapper的namespace，即在同一个namespace中查询sql可以从缓存中获取数据。二级缓存是可以跨SqlSession的。
 MyBatis的缓存分为一级缓存和二级缓存,
 `一级缓存放在session里面,默认就有,二级缓存放在它的命名空间里`
 使用二级缓存属性类需要实现Serializable序列化接口(可用来保存对象的状态),可在它的映射文件中配置
+二级缓存与一级缓存区别，二级缓存的范围更大，多个sqlSession可以共享一个UserMapper的二级缓存区域。数据类型仍然为HashMap
+UserMapper有一个二级缓存区域（按namespace分，如果namespace相同则使用同一个相同的二级缓存区），其它mapper也有自己的二级缓存区域（按namespace分）。
+每一个namespace的mapper都有一个二缓存区域，两个mapper的namespace如果相同，这两个mapper执行sql查询到数据将存在相同的二级缓存区域中。
+二级缓存
+<select id="selectByMinSalary" resultMap="BaseResultMap" parameterType="java.util.Map" useCache="true">  
+总之，要想使某条Select查询支持二级缓存，你需要保证：
+1.  MyBatis支持二级缓存的总开关：全局配置变量参数   cacheEnabled=true
+2. 该select语句所在的Mapper，配置了<cache> 或<cached-ref>节点，并且有效
+3. 该select语句的参数 useCache=true
+
 ### MyBatis与Hibernate有哪些不同？
 Mybatis和hibernate不同，它不完全是一个ORM框架，因为MyBatis需要程序员自己编写Sql语句，不过mybatis可以通过XML或注解方式灵活配置要运行的sql语句，并将java对象和sql语句映射生成最终执行的sql，最后将sql执行的结果再映射生成java对象。 
 Mybatis学习门槛低，简单易学，程序员直接编写原生态sql，可严格控制sql执行性能，灵活度高，非常适合对关系数据模型要求不高的软件开发，例如互联网软件、企业运营类软件等，因为这类软件需求变化频繁，一但需求变化要求成果输出迅速。但是灵活的前提是mybatis无法做到数据库无关性，如果需要实现支持多种数据库的软件则需要自定义多套sql映射文件，工作量大。 

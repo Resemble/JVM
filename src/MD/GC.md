@@ -8,7 +8,7 @@ JAVA的JVM的内存可分为3个区：堆(heap)、栈(stack)和方法区(method)
 对象的实例
 #### 栈区: 线程私有
 ##### 虚拟机栈
-栈帧存局部变量表(基本数据类型 boolean、byte、char，对象引用，returnAddress类型(指向了一条字节码指令的地址))、
+栈帧存局部变量表(基本数据类型 boolean、byte、char，`对象引用`，returnAddress类型(指向了一条字节码指令的地址))、
 操作数栈(任意类型的Java数据类型)、动态链接、方法出口
 ##### 本地方法栈
 为虚拟机使用到的 native 方法服务
