@@ -265,6 +265,24 @@ G1能充分利用多CPU、多核环境下的硬件优势，使用多个CPU来缩
 -XX:NewSize：设置JVM堆的‘新生代’的默认大小；
 -XX:MaxNewSize：设置JVM堆的‘新生代’的最大大小； 
 
+
+
+对于JVM内存配置参数：
+-Xmx10240m -Xms10240m -Xmn5120m -XXSurvivorRatio=3
+,其最小内存值和Survivor区总大小分别是（）
+A 5120m，1024m
+B 5120m，2048m
+C 10240m，1024m
+D 10240m，2048m
+
+-Xmx：最大堆大小
+-Xms：初始堆大小
+-Xmn:年轻代大小
+-XXSurvivorRatio：年轻代中Eden区与Survivor区的大小比值
+年轻代5120m， Eden：Survivor=3，Survivor区大小=1024m（Survivor区有两个，即将年轻代分为5份，每个Survivor区占一份），总大小为2048m。
+-Xms初始堆大小即最小内存值为10240m
+
+
 #### 为什么一些程序频繁发生GC？有如下原因： 
 1. 程序内调用了System.gc()或Runtime.gc()。 
 2. 一些中间件软件调用自己的GC方法，此时需要设置参数禁止这些GC。 
