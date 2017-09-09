@@ -14,4 +14,13 @@ public abstract class TestAbstract {
 
     }
     public abstract void testAbs();
+
+    public static void main(String[] args) {
+        TestAbstract child = new TestAbstract() {
+            @Override
+            public void testAbs() {
+                System.out.println("2343");
+            }
+        };
+    }
 }
