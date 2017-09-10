@@ -639,7 +639,28 @@ create table list(
 　partitions 4;  
 
 
+### sql执行顺序
+```sql
+FROM
+ON
+JOIN
+WHERE
+GROUP BY
+WITH CUBE or WITH ROLLUP
+HAVING
+SELECT
+DISTINCT
+ORDER BY
+TOP
+```
 
+HAVING 子句
+在 SQL 中增加 HAVING 子句原因是，WHERE 关键字无法与合计函数一起使用。
+```sql
+SELECT Customer,SUM(OrderPrice) FROM Orders
+GROUP BY Customer
+HAVING SUM(OrderPrice)<2000
+```
 
 
 
