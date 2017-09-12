@@ -23,15 +23,45 @@ put函数大致的思路为：
 - 如果节点已经存在就替换old value(保证key的唯一性)
 - 如果bucket满了(超过load factor*current capacity)，就要resize。
 
-
-
-
 #### get函数的实现
 在理解了put之后，get就很简单了。大致思路如下：
 - bucket里的第一个节点，直接命中；
 - 如果有冲突，则通过key.equals(k)去查找对应的entry
 - 若为树，则在树中通过key.equals(k)查找，O(logn)；
 - 若为链表，则在链表中通过key.equals(k)查找，O(n)。
+
+#### HashMap并发出现什么情况，为什么。并发导致死循环，原因没答上来。
+HashMap在并发环境下多线程put后可能导致get死循环，具体表现为CPU使用率100%
+假设这里有两个线程同时执行了put()操作，并进入了transfer()环节
+```java
+class Test {
+    void test() {
+        while(null != e) {
+            Entry<K,V> next = e.next; //线程1执行到这里被调度挂起了
+            e.next = newTable[i];
+            newTable[i] = e;
+            e = next;
+        }
+    }
+}
+```
+假设hash算法就是最简单的 key mod table.length（也就是数组的长度）。
+最上面的是old hash 表，其中的Hash表的 size = 2, 所以 key = 3, 7, 5，在 mod 2以后碰撞发生在 table[1]
+接下来的三个步骤是 Hash表 resize 到4，并将所有的 <key,value> 重新rehash到新 Hash 表的过程
+线程1 put 3 被挂起，线程2 put 7 然后产生死循环。
+
+#### HashCode 生成
+　String类的value是char[]，char可以转换成UTF-8编码。譬如，’a’、’b’、’c’的UTF-8编码分别是97,98,99；“abc”根据上面的代码转换成公式就是：
+　　h = 31 * 0 + 97 = 97；
+　　h = 31 * 97 + 98 = 3105；
+　　h = 31 * 3105 + 99 = 96354；
+　　使用31作为乘数因子是因为它是一个比较合适大小的质数：如值过小，当参与计算hashcode的项数较少时会导致积过小；如为偶数，则相当于是
+左位移，当乘法溢出时会造成有规律的位信息丢失。而这两者都会导致重复率增加。
+已经得到了重复率很低的hashCode
+⑴ 扰动函数
+为什么要先无符号右位移16位，然后再执行异或运算？
+你会发现只要二进制数后4位不变，前面的二进制位无论如何变化都会出现相同的结果。为了防止出现这种高位变化而低位不变导致的运算结果相同的
+情况，因此需要将高位的变化也加入进来，而将整数的二进制位上半部与下半部进行异或操作就可以得到这个效果。
 
 #### 归纳
 简单地说，HashMap 在底层将 key-value 当成一个整体进行处理，这个整体就是一个 Entry 对象。HashMap 底层采用一个 Entry[] 数组来保存
@@ -264,6 +294,9 @@ ArrayList 实现了 Cloneable 接口，即覆盖了函数 clone()，能被克隆
 ArrayList 实现 java.io.Serializable 接口，这意味着 ArrayList `支持序列化`，能通过序列化去传输。
  
 #### 扩容
+ if (minCapacity - elementData.length > 0)
+            grow(minCapacity);
+分析：如果最低要求的存储能力>ArrayList已有的存储能力，这就表示ArrayList的存储能力不足，因此需要调用 grow();方法进行扩容             
 数组进行扩容时，会将老数组中的元素重新拷贝一份到新的数组中，每次数组容量的增长大约是其原容量的` 1.5 `倍
 （从int newCapacity = oldCapacity + (oldCapacity >> 1)这行代码得出）。这种操作的代价是很高的，因此在实际使用时，
 我们应该尽量避免数组容量的扩张。
@@ -434,7 +467,6 @@ TreeMap的实现是红黑树算法的实现
 `红黑树（Red-Black Tree，以下简称RBTree）`的实际应用非常广泛，比如Linux内核中的完全公平调度器、`高精度计时器`、`ext3文件系统`等等，
 各种语言的函数库如Java的`TreeMap`和`TreeSet`，C++ STL的map、multimap、multiset等。
 TreeMap 按照 key 排序，TreeSet 按照里面的值排序跟 priorityQueue 一样，不过优先队列是最小堆实现。
-
 
 
 ### CopyOnWriteArrayList

@@ -174,6 +174,18 @@ ReentrantLock 没有以上的这些限制，且必须是手工释放锁。
  synchronized 少得多。 synchronized会自动释放锁，而`Lock一定要求程序员手工释放，并且必须在finally从句中释放`。
 ReentrantLock在性能上似乎优于Synchronized，其中在jdk1.6中略有胜出，在1.5中是远远胜出。
 
+##### synchronized 和 lock 都是可重入锁
+从设计上讲，当一个线程请求一个由其他线程持有的对象锁时，该线程会阻塞。当线程请求自己持有的对象锁时，如果该线程是重入锁，请求就会成功，否则阻塞。
+线程请求一个未被占有的锁时候，JVM将记录锁的占有者，并且将请求计数设置为1。如果同一个线程再次请求这个锁，计数将递增；每次占用线程
+退出语句块时，计数器值将递减，直到计数器达到0时候，锁被释放。
+
+应用场景
+我讲一个应用场景就是比如数据库事务的实现过程中。场景：add操作将会获取锁，若一个事务当中多次add，就应该允许该线程多次进入该临界区。
+synchronized锁也是个可重入锁，比如一个类当中的两个非静态方法都被synchronized修饰，则线程在获取synchronized锁访问一个方法时是可以
+进入另一个synchronized方法的（PS：应该也能进入static方法的synchronized修饰临界区的，因为是两把不同的锁，表现的不是可重入的特性）
+比如我今天遇到的一个场景：用户名和密码保存在本地txt文件中，则登录验证方法和更新密码方法都应该被加synchronized，那么当更新密码的时候
+需要验证密码的合法性，所以需要调用验证方法，此时是可以调用的。
+
 
 
 #### 简单的总结
@@ -238,93 +250,6 @@ handler)，或者是回调函数；事件分发器在适当的时候，会将请
 异步IO操作（称为overlapped技术），事件分发器等IO Complete事件完成。这种异步模式的典型实现是基于操作系统底层异步API的，所以我们可
 称之为“系统级别”的或者“真正意义上”的异步，因为具体的读写是由操作系统代劳的。
 
-
-### ExecutorService
-#### 四类 Pool
-1. CachedThreadPool
-CachedThreadPool首先会`按照需要创建足够多的线程来执行任务(Task)`。随着程序执行的过程，有的线程执行完了任务，可以被重新循环使用时，才不再创建新的线程来执行任务
-
-2. FixedThreadPool
-FixedThreadPool模式会使用一个`优先固定数目的线程`来处理若干数目的任务。规定数目的线程处理所有任务，`一旦有线程处理完了任务就会被
-用来处理新的任务(如果有的话)`。这种模式与上面的CachedThreadPool是不同的，CachedThreadPool模式下处理一定数量的任务的线程数目是不确
-定的。而FixedThreadPool模式下最多 的线程数目是一定的。
-
-3. SingleThreadExecutor模式
-SingleThreadExecutor模式只会创建一个线程。它和FixedThreadPool比较类似，不过`线程数是一个`。如果多个任务被提交给SingleThreadExecutor的话，
-那么这些任务会被保存在`一个队列中`，并且会按照任务提交的顺序，一个先执行完成再执行另外一个线程。
-SingleThreadExecutor模式可以保证只有一个任务会被执行。这种特点可以被用来处理共享资源的问题而不需要考虑同步的问题。
-4. ScheduledExecutorService执行`周期性或定时任务`
-schedule方法被用来延迟指定时间来执行某个指定任务。如果你需要周期性重复执行定时任务可以使用scheduleAtFixedRate或者
-scheduleWithFixedDelay方法，它们不同的是前者以固定频率执行，后者以相对固定频率执行。
-
-任务分两类：一类是实现了Runnable接口的类，一类是实现了Callable接口的类。两者都可以被ExecutorService执行，但是Runnable任务没有返回值，
-而Callable任务有返回值。并且Callable的call()方法只能通过ExecutorService的(<T> task) 方法来执行，并且返回一个 <T><T>，是表示任务等待完成的 Future。
-### execute方法和submit方法三个区别：
-1、接收的参数不一样
-2、submit有返回值，而execute没有
-Method submit extends base method Executor.execute by creating and returning a Future that can be used to cancel execution and/or wait for completion. 
-用到返回值的例子，比如说我有很多个做validation的task，我希望所有的task执行完，然后每个task告诉我它的执行结果，是成功还是失败，如果是失败，原因是什么。然后我就可以把所有失败的原因综合起来发给调用者。
-个人觉得cancel execution这个用处不大，很少有需要去取消执行的。
-而最大的用处应该是第二点。
-3、submit方便Exception处理
-
-### 创建多线程的三种方法及其区别
-1. 新建类继承 Thread 类实现线程
-2. 通过实现接口 Runnable 实现创建线程
-3. 使用ExecutorService、Callable、Future实现有返回结果可抛异常的多线程(JDK5.0以后)
-`可返回值的任务必须实现Callable接口`，类似的，`无返回值的任务必须Runnable接口`。执行Callable任务后，可以获取一个Future的对象，
-在该对象上调用get就可以获取到Callable任务返回的Object了，再结合线程池接口ExecutorService就可以实现传说中有返回结果的多线程了。
-```java
-public class Test {  
-public static void main(String[] args) throws ExecutionException,  
-    InterruptedException {  
-   System.out.println("----程序开始运行----");  
-   Date date1 = new Date();  
-  
-   int taskSize = 5;  
-   // 创建一个线程池  
-   ExecutorService pool = Executors.newFixedThreadPool(taskSize);  
-   // 创建多个有返回值的任务  
-   List<Future> list = new ArrayList<Future>();  
-   for (int i = 0; i < taskSize; i++) {  
-    Callable c = new MyCallable(i + " ");  
-    // 执行任务并获取Future对象  
-    Future f = pool.submit(c);  
-    // System.out.println(">>>" + f.get().toString());  
-    list.add(f);  
-   }  
-   // 关闭线程池  
-   pool.shutdown();  
-  
-   // 获取所有并发任务的运行结果  
-   for (Future f : list) {  
-    // 从Future对象上获取任务的返回值，并输出到控制台  
-    System.out.println(">>>" + f.get().toString());  
-   }  
-  
-   Date date2 = new Date();  
-   System.out.println("----程序结束运行----，程序运行时间【"  
-     + (date2.getTime() - date1.getTime()) + "毫秒】");  
-}  
-}
-class MyCallable implements Callable<Object> {  
-    private String taskNum;  
-  
-    MyCallable(String taskNum) {  
-    this.taskNum = taskNum;  
-    }  
-  
-    public Object call() throws Exception {  
-       System.out.println(">>>" + taskNum + "任务启动");  
-       Date dateTmp1 = new Date();  
-       Thread.sleep(1000);  
-       Date dateTmp2 = new Date();  
-       long time = dateTmp2.getTime() - dateTmp1.getTime();  
-       System.out.println(">>>" + taskNum + "任务终止");  
-       return taskNum + "任务返回运行结果,当前任务时间【" + time + "毫秒】";  
-    }  
-}
-```
 
 
 ### 引用
@@ -472,7 +397,7 @@ JAVA反射机制是在运行状态中，对于任意一个类，都能够知道�
 通过反射在被调用方法前后加上自己的操作，而不需要更改被调用类的源码，大大地降低了模块之间的耦合性，体现了极大的优势。
 #### 关于类加载器
 在Proxy类中的newProxyInstance()方法中需要一个ClassLoader类的实例，ClassLoader实际上对应的是类加载器，在Java中主要有以下三种类加载器：
-① Booststrap ClassLoader：此加载器采用C++编写，通常加载jre/lib/rt.jar，一般开发中是看不到的； 
+① Bootstrap ClassLoader：此加载器采用C++编写，通常加载jre/lib/rt.jar，一般开发中是看不到的； 
 ② Extension ClassLoader：用来进行扩展类的加载，通常加载jre/lib/ext/*.jar; 
 ③ AppClassLoader：(默认)加载classpath指定的类，是最常使用的是一种加载器；
 
@@ -1300,6 +1225,143 @@ private < default < protected < public
 2、可以有不责骂的返回类型，只要参数列表不同就可以了；
 3、可以有不同的访问修饰符；
 4、可以抛出不同的异常；
+
+
+
+
+### ExecutorService
+#### 四类 
+```java
+class Test {
+     public ThreadPoolExecutor(int corePoolSize,int maximumPoolSize,long keepAliveTime,TimeUnit unit,
+        BlockingQueue<Runnable> workQueue,RejectedExecutionHandler handler);   
+}
+```
+参数介绍：
+corePoolSize 核心线程数，指保留的线程池大小（不超过maximumPoolSize值时，线程池中最多有corePoolSize 个线程工作）。 
+maximumPoolSize 指的是线程池的最大大小（线程池中最大有corePoolSize 个线程可运行）。 
+keepAliveTime 指的是空闲线程结束的超时时间（当一个线程不工作时，过keepAliveTime 长时间将停止该线程）。 
+unit 是一个枚举，表示 keepAliveTime 的单位（有NANOSECONDS, MICROSECONDS, MILLISECONDS, SECONDS, MINUTES, HOURS, DAYS，7个可选值）。 
+workQueue 表示存放任务的队列（存放需要被线程池执行的线程队列）。 
+handler 拒绝策略（添加任务失败后如何处理该任务）.
+1、线程池刚创建时，里面没有一个线程。任务队列是作为参数传进来的。不过，就算队列里面有任务，线程池也不会马上执行它们。
+2、当调用 execute() 方法添加一个任务时，线程池会做如下判断：
+  a. 如果正在运行的线程数量小于 corePoolSize，那么马上创建线程运行这个任务；
+  b. 如果正在运行的线程数量大于或等于 corePoolSize，那么将这个任务放入队列。
+  c. 如果这时候队列满了，而且正在运行的线程数量小于 maximumPoolSize，那么还是要创建线程运行这个任务；
+  d. 如果队列满了，而且正在运行的线程数量大于或等于 maximumPoolSize，那么线程池会抛出异常，告诉调用者“我不能再接受任务了”。
+3、当一个线程完成任务时，它会从队列中取下一个任务来执行。
+4、当一个线程无事可做，超过一定的时间（keepAliveTime）时，线程池会判断，如果当前运行的线程数大于 corePoolSize，那么这个线程就被停掉。
+所以线程池的所有任务完成后，它最终会收缩到 corePoolSize 的大小。
+  这个过程说明，并不是先加入任务就一定会先执行。假设队列大小为 4，corePoolSize为2，maximumPoolSize为6，那么当加入15个任务时，执行
+的顺序类似这样：首先执行任务 1、2，然后任务3~6被放入队列。这时候队列满了，任务7、8、9、10 会被马上执行，而任务 11~15 则会抛出异常。
+最终顺序是：1、2、7、8、9、10、3、4、5、6。当然这个过程是针对指定大小的ArrayBlockingQueue<Runnable>来说，
+如果是LinkedBlockingQueue<Runnable>，因为该队列无大小限制，所以不存在上述问题。
+
+```java
+class Test {
+    void test() {
+                
+        // new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS,new SynchronousQueue<Runnable>());
+        ExecutorService executorService = Executors.newCachedThreadPool();
+        
+        // new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>());
+        ExecutorService executorService1 = Executors.newSingleThreadExecutor();
+        
+        // new ThreadPoolExecutor(nThreads, nThreads, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>());
+        ExecutorService executorService2 = Executors.newFixedThreadPool(3);
+        
+        //  super(corePoolSize, Integer.MAX_VALUE, 0, NANOSECONDS, new DelayedWorkQueue());
+        ExecutorService executorService3 = Executors.newScheduledThreadPool(2);
+       
+    }
+}
+```
+
+1. CachedThreadPool  
+CachedThreadPool首先会`按照需要创建足够多的线程来执行任务(Task)`。随着程序执行的过程，有的线程执行完了任务，可以被重新循环使用时，才不再创建新的线程来执行任务
+
+2. FixedThreadPool
+FixedThreadPool模式会使用一个`优先固定数目的线程`来处理若干数目的任务。规定数目的线程处理所有任务，`一旦有线程处理完了任务就会被
+用来处理新的任务(如果有的话)`。这种模式与上面的CachedThreadPool是不同的，CachedThreadPool模式下处理一定数量的任务的线程数目是不确
+定的。而FixedThreadPool模式下最多 的线程数目是一定的。
+
+3. SingleThreadExecutor模式
+SingleThreadExecutor模式只会创建一个线程。它和FixedThreadPool比较类似，不过`线程数是一个`。如果多个任务被提交给SingleThreadExecutor的话，
+那么这些任务会被保存在`一个队列中`，并且会按照任务提交的顺序，一个先执行完成再执行另外一个线程。
+SingleThreadExecutor模式可以保证只有一个任务会被执行。这种特点可以被用来处理共享资源的问题而不需要考虑同步的问题。
+4. ScheduledExecutorService执行`周期性或定时任务`
+schedule方法被用来延迟指定时间来执行某个指定任务。如果你需要周期性重复执行定时任务可以使用scheduleAtFixedRate或者
+scheduleWithFixedDelay方法，它们不同的是前者以固定频率执行，后者以相对固定频率执行。
+
+任务分两类：一类是实现了Runnable接口的类，一类是实现了Callable接口的类。两者都可以被ExecutorService执行，但是Runnable任务没有返回值，
+而Callable任务有返回值。并且Callable的call()方法只能通过ExecutorService的(<T> task) 方法来执行，并且返回一个 <T><T>，是表示任务等待完成的 Future。
+### execute方法和submit方法三个区别：
+1、接收的参数不一样
+2、submit有返回值，而execute没有
+Method submit extends base method Executor.execute by creating and returning a Future that can be used to cancel execution and/or wait for completion. 
+用到返回值的例子，比如说我有很多个做validation的task，我希望所有的task执行完，然后每个task告诉我它的执行结果，是成功还是失败，如果是失败，原因是什么。然后我就可以把所有失败的原因综合起来发给调用者。
+个人觉得cancel execution这个用处不大，很少有需要去取消执行的。
+而最大的用处应该是第二点。
+3、submit方便Exception处理
+
+### 创建多线程的三种方法及其区别
+1. 新建类继承 Thread 类实现线程
+2. 通过实现接口 Runnable 实现创建线程
+3. 使用ExecutorService、Callable、Future实现有返回结果可抛异常的多线程(JDK5.0以后)
+`可返回值的任务必须实现Callable接口`，类似的，`无返回值的任务必须Runnable接口`。执行Callable任务后，可以获取一个Future的对象，
+在该对象上调用get就可以获取到Callable任务返回的Object了，再结合线程池接口ExecutorService就可以实现传说中有返回结果的多线程了。
+```java
+public class Test {  
+public static void main(String[] args) throws ExecutionException,  
+    InterruptedException {  
+   System.out.println("----程序开始运行----");  
+   Date date1 = new Date();  
+  
+   int taskSize = 5;  
+   // 创建一个线程池  
+   ExecutorService pool = Executors.newFixedThreadPool(taskSize);  
+   // 创建多个有返回值的任务  
+   List<Future> list = new ArrayList<Future>();  
+   for (int i = 0; i < taskSize; i++) {  
+    Callable c = new MyCallable(i + " ");  
+    // 执行任务并获取Future对象  
+    Future f = pool.submit(c);  
+    // System.out.println(">>>" + f.get().toString());  
+    list.add(f);  
+   }  
+   // 关闭线程池  
+   pool.shutdown();  
+  
+   // 获取所有并发任务的运行结果  
+   for (Future f : list) {  
+    // 从Future对象上获取任务的返回值，并输出到控制台  
+    System.out.println(">>>" + f.get().toString());  
+   }  
+  
+   Date date2 = new Date();  
+   System.out.println("----程序结束运行----，程序运行时间【"  
+     + (date2.getTime() - date1.getTime()) + "毫秒】");  
+}  
+}
+class MyCallable implements Callable<Object> {  
+    private String taskNum;  
+  
+    MyCallable(String taskNum) {  
+    this.taskNum = taskNum;  
+    }  
+  
+    public Object call() throws Exception {  
+       System.out.println(">>>" + taskNum + "任务启动");  
+       Date dateTmp1 = new Date();  
+       Thread.sleep(1000);  
+       Date dateTmp2 = new Date();  
+       long time = dateTmp2.getTime() - dateTmp1.getTime();  
+       System.out.println(">>>" + taskNum + "任务终止");  
+       return taskNum + "任务返回运行结果,当前任务时间【" + time + "毫秒】";  
+    }  
+}
+```
 
 
 ####  submit与execute区别
