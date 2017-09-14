@@ -1485,9 +1485,24 @@ Static方法是类中的一种特殊方法，我们只有在真正需要他们�
 被static修饰的代码块，我们称之为静态代码块，静态代码块会随着类的加载一块执行，而且他可以随意放，可以存在于该了的任何地方。
 
 
-#### 异常和错误
+#### 异常和错误 Exception VS Error
 异常分为运行时异常，非运行时异常和error，其中error是系统异常，只能重启系统解决。非运行时异常需要我们自己补获，而运行异常是程序运行
-时由虚拟机帮助我们补获，运行时异常包括数组的溢出，内存的溢出空指针，分母为0等！
+时由虚拟机帮助我们补获，`运行时异常包括数组的溢出，内存的溢出空指针，分母为0等！`
+public class RuntimeException extends Exception
+public class Exception extends Throwable 
+1) java.lang.Error: Throwable 的子类，用于标记严重错误。合理的应用程序不应该去 try/catch 这种错误。绝大多数的错误都是非正常的，就根本不该出现的。
+java.lang.Exception: Throwable 的子类，用于指示一种合理的程序想去 catch 的条件。即它仅仅是一种程序运行条件，而非严重错误，并且鼓励用户程序去 catch 它。
+2) Error 和 RuntimeException 及其子类都是未检查的异常（unchecked exceptions），而所有其他的 Exception 类都是检查了的异常（checked exceptions）
+
+运行时异常如果不处理会怎么样？应该怎么处理运行时异常？
+不会怎么样，会在运行的时候出错。（RuntimeError是uncheck异常，所以不需要捕获）
+请写出 5 种常见到的runtime exception。
+答：
+NullPointerException：当操作一个空引用时会出现此错误。
+NumberFormatException：数据格式转换出现问题时出现此异常。
+ClassCastException：强制类型转换类型不匹配时出现此异常。
+ArrayIndexOutOfBoundsException：数组下标越界，当使用一个不存在的数组下标时出现此异常。
+ArithmeticException：数学运行错误时出现此异常
 
 #### 流（Stream）和集合（Collection）的区别：
 - Collection主要用来对元素进行管理和访问；
