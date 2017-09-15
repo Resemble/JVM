@@ -696,7 +696,8 @@ CAS 只对单个共享变量有效，当操作涉及跨`多个共享变量时 CA
 从 JDK 1.5开始提供了 `AtomicReference 类来保证引用对象之间的原子性`，你可以把`多个变量放在一个对象`里来进行 CAS 操作
 
 ### volatile
-volatile可以保证`线程可见性`且提供了一定的`有序性`，`但是无法保证原子性`。在JVM底层volatile是采用“内存屏障”来实现的。内存屏障(Memory Barriers)是一组处理器指令，用于实现对内存操作的顺序限制。
+volatile可以保证`线程可见性`且提供了一定的`有序性`，`但是无法保证原子性`。在JVM底层volatile是采用“内存屏障”来实现的。
+内存屏障(Memory Barriers)是一组处理器指令，用于实现对内存操作的顺序限制。
 上面那段话，有两层语义
 - 保证可见性、不保证原子性
 - 禁止指令重排序
@@ -757,7 +758,8 @@ Collections.sort()
 基本类型则直接存数值. 
 2、存放空间
 对于对象大家都知道，是存放于堆中，而基本类型则存放于栈中
-相比而言，堆栈更高效，这也是java保留基本类型的原因。包装类创建的对象，可以使用api提供的一些有用的方法。
+相比而言，栈更高效，这也是java保留基本类型的原因。包装类创建的对象，可以使用api提供的一些有用的方法。
+
 3、用途
 对于包装类说，这些类的用途主要包含两种：
  a、作为和基本数据类型对应的类类型存在，方便涉及到对象的操作。
@@ -767,6 +769,11 @@ Collections.sort()
 包装类是引用传递 
 基本类型是值传递  
   
+##### 栈比堆高效的原因
+栈操作可以被 JIT 优化，得到 CPU 指令的加速
+栈没有碎片，寻址间距短，可以被 CPU 预测行为
+栈可以利用到 CPU 的高速缓存
+栈无需释放内存和进行随机寻址
   
 ### cookie 和 session 的区别
 1. cookie 机制采用客户端保持状态的方案，session 采用的是在服务器保持状态的方案
@@ -1550,10 +1557,18 @@ __第二种__写法我们叫内部迭代，两段代码虽然看起来只是语�
 外部迭代同时承担了做什么（把形状设为红色）和怎么做（得到Iterator实例然后依次遍历），而内部迭代只负责做什么，而把怎么做留给类库。
 这样代码会变得更加清晰，而集合类库则可以在内部进行各种优化。
 
+#### 反射的三种实现方式
+Class c1 = Code.class;
+这说明任何一个类都有一个隐含的静态成员变量class，这种方式是通过获取类的静态成员变量class得到的
+Class c2 = code1.getClass();
+code1是Code的一个对象，这种方式是通过一个类的对象的getClass()方法获得的
+Class c3 = Class.forName("com.trigl.reflect.Code");
+这种方法是Class类调用forName方法，通过一个类的全量限定名获得
 
-
-
-
+Class c = Class.forName("com.tengj.reflect.Person");  //先生成class
+Object o = c.newInstance();                           //newInstance可以初始化一个实例
+Method method = c.getMethod("fun", String.class, int.class);//获取方法
+method.invoke(o, "tengj", 10);       
 
 
 
