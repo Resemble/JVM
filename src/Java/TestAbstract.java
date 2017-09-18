@@ -11,7 +11,7 @@ package Java;
 public abstract class TestAbstract {
     int i = 0;
     public void TestAbstract() {
-
+        System.out.println("fdsf");
     }
     public abstract void testAbs();
 

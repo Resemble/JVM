@@ -10,5 +10,5 @@ package Java;
  */
 public interface TestInterface {
     int i = 0;
-    public void TestInterface();
+    void TestInterface();
 }

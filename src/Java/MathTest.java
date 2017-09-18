@@ -21,4 +21,13 @@ public class MathTest {
         System.out.println(1/3*3);
     }
 
+    public void getNum(int i) {
+        return;
+    }
+
+    // 返回值可以不同，可以相同
+    public int getNum(int i, int j) {
+        return 3;
+    }
+
 }
