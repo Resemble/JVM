@@ -14,6 +14,8 @@ public class TestStatic {
     static int getResult = 2;
 
     public static int getInt() {
+        Integer integer = new Integer(2);
+        integer.shortValue();
         int i = getResult;
         return result;
     }
