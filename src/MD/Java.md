@@ -164,6 +164,8 @@ monitor的所有权，过程如下：
 - 如果线程已经拥有了该monitor，只是重新进入，则进入monitor的进入数加1;
 - 如果其他线程已经占用了monitor，则该线程进入阻塞状态，直到monitor的进入数为0，再重新尝试获取monitor的所有权。
 
+重量级锁通过对象内部的监视器（monitor）实现，其中monitor的本质是依赖于底层操作系统的Mutex Lock实现，操作系统实现线程之间的切换需要从用户态到内核态的切换，切换成本非常高。
+
 ReentrantLock 是 Lock 接口的实现类
 （1）什么情况下可以使用 ReentrantLock
 使用synchronized 的一些限制： 
