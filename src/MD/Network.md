@@ -758,6 +758,8 @@ Content-Type:multipart/form-data;
 比如输入www.google.com，先向本地域名服务器 -> 根域名服务器 -> 本地域名服务器 -> 顶级域名服务器 -> 本地域名服务器 -> google.com域名服务器，查到了ip 
 - TCP连接
 - 发送HTTP请求
+-  facebook服务的永久重定向响应  服务器给浏览器响应一个301永久重定向响应，这样浏览器就会访问“http://www.facebook.com/” 而非“http://facebook.com/”。
+- 浏览器跟踪重定向地址 现在，浏览器知道了“http://www.facebook.com/”才是要访问的正确地址，所以它会发送另一个获取请求
 - 服务器处理请求并返回HTTP报文
 - 浏览器解析渲染页面
 - 连接结束

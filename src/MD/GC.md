@@ -266,7 +266,8 @@ G1能充分利用多CPU、多核环境下的硬件优势，使用多个CPU来缩
 -XX:PermSize：设定内存的永久保存区域；
 -XX:NewSize：设置JVM堆的‘新生代’的默认大小；
 -XX:MaxNewSize：设置JVM堆的‘新生代’的最大大小； 
-
+-XX:SurvivorRatio	提供Eden区和survivor区的空间比例。比如，如果年轻代的大小为10m并且VM开关是-XX:SurvivorRatio=2，
+那么将会保留5m内存给Eden区和每个Survivor区分配2.5m内存。默认比例是8。
 
 
 对于JVM内存配置参数：

@@ -1213,6 +1213,9 @@ private < default < protected < public
 
 
 ### ExecutorService
+最佳线程数目 = （（线程等待时间+线程CPU时间）/线程CPU时间 ）* CPU数目
+如果是CPU密集型应用，则线程池大小设置为N+1
+如果是IO密集型应用，则线程池大小设置为2N+1
 #### 四类 
 ```java
 class Test {

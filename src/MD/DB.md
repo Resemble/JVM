@@ -427,6 +427,36 @@ B+-tree的内部节点并没有指向关键字具体信息的指针,因此其内
 `B+树只需要去遍历叶子节点就可以实现整棵树的遍历.而且在数据库中基于范围的查询是非常频繁的，而B树不支持这样的操作（或者说效率太低）`.　　
 叶子节点是一个链表
 
+B树每个非终端结点中包含有n个关键字信息： (n，A0，K1，A1，K2，A2，......，Kn，An)。其中，
+a) Ki (i=1...n)为关键字，且关键字按顺序排序Ki < K(i-1)。
+b) Ai为指向子树根的接点，且指针A(i-1)指向子树种所有结点的关键字均小于Ki，但都大于K(i-1)。
+c) 关键字的个数n必须满足： [m\/2]-1 <= n <= m-1
+
+B+-tree的内部结点并没有指向关键字具体信息的指针。因此其内部结点相对B 树更小。如果把所有同一内部结点的关键字存放在同一盘块中，那么
+盘块所能容纳的关键字数量也越多。一次性读入内存中的需要查找的关键字也就越多。
+B+树中只有叶子节点会带有指向记录的指针（ROWID），而B树则所有节点都带有，在内部节点出现的索引项不会再出现在叶子节点中。
+2) B+-tree的查询效率更加稳定
+由于非终结点并不是最终指向文件内容的结点，而只是叶子结点中关键字的索引。所以任何关键字的查找必须走一条从根结点到叶子结点的路。所有
+关键字查询的路径长度相同，导致每一个数据的查询效率相当。
+
+
+#### 前缀索引
+对于BLOB，text或者很长的varchar类型的列，必须使用前缀索引。
+```sql
+select count(*) as cnt,
+  left(city,3) as pref 
+from city_demo 
+group by pref 
+order by cnt desc 
+limit 10;
+
+alter table city_demo add key (city(6));
+
+explain select * from city_demo where city like 'Jinch%';
+```
+通过 left 来查看耗时，最后 add key，最后 like 匹配。type 为 range。
+
+
 ### 分库分表
 #### 垂直分表
 垂直分表在日常开发和设计中比较常见，通俗的说法叫做“大表拆小表”，拆分是基于关系型数据库中的“列”（字段）进行的。通常情况，某个表中的字
@@ -675,7 +705,22 @@ HAVING 子句
 ```sql
 SELECT Customer,SUM(OrderPrice) FROM Orders
 GROUP BY Customer
-HAVING SUM(OrderPrice)<2000
+HAVING SUM(OrderPrice)<2000;
+
+SELECT COUNT(*)
+,fund_type
+FROM fund.fund_basic_info
+GROUP BY fund_basic_info.fund_type;
+SELECT COUNT(*)
+FROM fund.fund_basic_info;
+
+SELECT * FROM (
+  SELECT
+    COUNT(*) AS count,
+    area
+  FROM house
+  GROUP BY area
+) AS tt WHERE count > 88;
 ```
 
 
