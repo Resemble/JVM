@@ -3,6 +3,7 @@ package aqs;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author ranbo
@@ -12,7 +13,7 @@ import java.util.concurrent.Executors;
  * @Description:
  * @date 2018/9/16 下午3:34
  */
-public class CountDownLatchExample1 {
+public class CountDownLatchExample2 {
 
     private static int threadCount = 200;
 
@@ -32,7 +33,7 @@ public class CountDownLatchExample1 {
                 }
             });
         }
-        countDownLatch.await();
+        countDownLatch.await(10, TimeUnit.MILLISECONDS);
         System.out.println("finnish");
         executorService.shutdown();
     }
@@ -40,7 +41,6 @@ public class CountDownLatchExample1 {
     private static void test(int threadNum) throws InterruptedException {
         Thread.sleep(100);
         System.out.println(threadNum);
-        Thread.sleep(100);
     }
 
 }
