@@ -1,9 +1,6 @@
 package aqs;
 
-import java.util.concurrent.BrokenBarrierException;
-import java.util.concurrent.CyclicBarrier;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 
 /**
  * @author ranbo
@@ -13,7 +10,7 @@ import java.util.concurrent.Executors;
  * @Description:
  * @date 2018/9/16 下午3:54
  */
-public class CyclicBarrierExample1 {
+public class CyclicBarrierExample2 {
 
     private static CyclicBarrier barrier = new CyclicBarrier(5);
 
@@ -29,16 +26,23 @@ public class CyclicBarrierExample1 {
                     e.printStackTrace();
                 } catch (BrokenBarrierException e) {
                     e.printStackTrace();
+                } catch (TimeoutException e) {
+                    e.printStackTrace();
                 }
             });
         }
         executorService.shutdown();
     }
 
-    private static void race(int threadNum) throws InterruptedException, BrokenBarrierException {
+    private static void race(int threadNum)
+        throws InterruptedException, BrokenBarrierException, TimeoutException {
         Thread.sleep(1000);
         System.out.println("" + threadNum + " is ready");
-         barrier.await();
+        try {
+            barrier.await(2000, TimeUnit.MILLISECONDS);  // 只等2s
+        } catch (BrokenBarrierException | TimeoutException e) {
+            System.out.println("warn " + e);
+        }
         System.out.println("continue");
     }
 

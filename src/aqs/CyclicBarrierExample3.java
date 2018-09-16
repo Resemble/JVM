@@ -10,9 +10,11 @@ import java.util.concurrent.*;
  * @Description:
  * @date 2018/9/16 下午3:54
  */
-public class CyclicBarrierExample2 {
+public class CyclicBarrierExample3 {
 
-    private static CyclicBarrier barrier = new CyclicBarrier(5);
+    private static CyclicBarrier barrier = new CyclicBarrier(5, () -> {
+        System.out.println("callback is running");
+    });
 
     public static void main(String[] args) throws InterruptedException {
         ExecutorService executorService = Executors.newCachedThreadPool();
@@ -21,12 +23,11 @@ public class CyclicBarrierExample2 {
             Thread.sleep(1000);
             executorService.execute(() -> {
                 try {
+
                     race(threadNum);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 } catch (BrokenBarrierException e) {
-                    e.printStackTrace();
-                } catch (TimeoutException e) {
                     e.printStackTrace();
                 }
             });
@@ -34,15 +35,10 @@ public class CyclicBarrierExample2 {
         executorService.shutdown();
     }
 
-    private static void race(int threadNum)
-        throws InterruptedException, BrokenBarrierException, TimeoutException {
+    private static void race(int threadNum) throws InterruptedException, BrokenBarrierException {
         Thread.sleep(1000);
         System.out.println("" + threadNum + " is ready");
-        try {
-            barrier.await(2000, TimeUnit.MILLISECONDS);  // 只等2s
-        } catch (BrokenBarrierException | TimeoutException e) {
-            System.out.println("warn " + e);
-        }
+        barrier.await();
         System.out.println("continue");
     }
 
