@@ -4,8 +4,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.StampedLock;
 
 /**
  * @author ranbo
@@ -15,13 +14,13 @@ import java.util.concurrent.locks.ReentrantLock;
  * @Description:
  * @date 2018/9/16 下午4:24
  */
-public class LockExample2 {
+public class LockExample4 {
 
     public static int clientTotal = 5000;  // 请求总数
     public static int threadTotal = 200;  // 同时并发执行的线程数
     public static int count = 0;
 
-    private final static Lock lock = new ReentrantLock();
+    private final static StampedLock lock = new StampedLock();
 
     public static void main(String[] args) throws InterruptedException {
         ExecutorService executorService = Executors.newCachedThreadPool();
@@ -45,13 +44,13 @@ public class LockExample2 {
     }
 
     private static void add() {
-        lock.lock();
+        long stmap = lock.writeLock();
         try {
             count++;
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            lock.unlock();
+            lock.unlock(stmap);
         }
     }
 }

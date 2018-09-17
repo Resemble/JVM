@@ -1,11 +1,10 @@
 package Lock;
 
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Semaphore;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * @author ranbo
@@ -15,43 +14,42 @@ import java.util.concurrent.locks.ReentrantLock;
  * @Description:
  * @date 2018/9/16 下午4:24
  */
-public class LockExample2 {
+public class LockExample3 {
 
-    public static int clientTotal = 5000;  // 请求总数
-    public static int threadTotal = 200;  // 同时并发执行的线程数
-    public static int count = 0;
+    private final Map<String, Data> map = new TreeMap<>();
+    private final ReentrantReadWriteLock reentrantReadWriteLock = new ReentrantReadWriteLock();
+    private final Lock readLock = reentrantReadWriteLock.readLock();
+    private final Lock writeLock = reentrantReadWriteLock.writeLock();
 
-    private final static Lock lock = new ReentrantLock();
-
-    public static void main(String[] args) throws InterruptedException {
-        ExecutorService executorService = Executors.newCachedThreadPool();
-        final Semaphore semaphore = new Semaphore(threadTotal);
-        final CountDownLatch countDownLatch = new CountDownLatch(clientTotal);
-        for (int i = 0; i < clientTotal; i++) {
-            executorService.execute(() -> {
-                try {
-                    semaphore.acquire();
-                    add();
-                    semaphore.release();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                countDownLatch.countDown();
-            });
+    public Data get(String key) {
+        readLock.lock();
+        try {
+            return map.get(key);
+        } finally {
+            readLock.unlock();
         }
-        countDownLatch.await();
-        executorService.shutdown();
-        System.out.println("count: " + count);
     }
 
-    private static void add() {
-        lock.lock();
+    public Set<String> getAllKeys() {
+        readLock.lock();
         try {
-            count++;
-        } catch (Exception e) {
-            e.printStackTrace();
+            return map.keySet();
         } finally {
-            lock.unlock();
+            readLock.unlock();
         }
+
+    }
+
+    public Data put(String key, Data value) {
+        writeLock.lock();
+        try {
+            return map.put(key, value);
+        } finally {
+            writeLock.unlock();
+        }
+    }
+
+    class Data {
+
     }
 }
