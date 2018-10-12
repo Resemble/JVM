@@ -14,18 +14,18 @@ import java.util.concurrent.Executors;
 public class SynchronizedExample2 {
 
     // 修饰一个类
-    public static void test1(int j) {
+    public static void test1() {
         synchronized (SynchronizedExample2.class) {
             for (int i = 0; i < 10; i++) {
-                System.out.println("test1 " + j + " - " + i);
+                System.out.println(Thread.currentThread().getName() + " - " + i);
             }
         }
     }
 
     // 修饰一个静态方法
-    public static synchronized void test2(int j) {
+    public static synchronized void test2() {
         for (int i = 0; i < 10; i++) {
-            System.out.println("test1 " + j + " - " + i);
+            System.out.println(Thread.currentThread().getName() + " - " + i);
 
         }
     }
@@ -35,12 +35,12 @@ public class SynchronizedExample2 {
         SynchronizedExample2 synchronizedExample2 = new SynchronizedExample2();
         ExecutorService executorService = Executors.newCachedThreadPool();
         executorService.execute(()-> {
-            synchronizedExample1.test1(1);
+            synchronizedExample1.test1();
         });
         executorService.execute(()-> {
-            synchronizedExample2.test1(2);
+            synchronizedExample2.test1();
         });
-
+        executorService.shutdown();
 
     }
     
