@@ -1,4 +1,4 @@
-package Thread;
+package gc;
 
 /**
  * @author ranran
